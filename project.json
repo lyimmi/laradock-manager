@@ -1,6 +1,6 @@
 {
  "name": "Laradock manager",
- "description": "Enter your project description",
+ "description": "A simple desktop application for managing laradock containers",
  "author": {
   "name": "Zambo, Levente",
   "email": "levente.zambo@gmail.com"
