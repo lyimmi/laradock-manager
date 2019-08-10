@@ -36,4 +36,8 @@
     .logo {
         width: 16em;
     }
+
+    a {
+        text-decoration: none;
+    }
 </style>

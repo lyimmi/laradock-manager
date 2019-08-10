@@ -65,7 +65,23 @@ func containers() string {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
 	}
-	return "OK: " + out.String()
+	return out.String()
+}
+
+func toggleContainers(state string, container string) bool {
+	cmd := exec.Command("docker-compose", state, container)
+	cmd.Dir = "/home/lyimmi/Projects/webnetwork/laradock/"
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return false
+	}
+	fmt.Println(out.String())
+	return true
 }
 
 func main() {
@@ -84,6 +100,7 @@ func main() {
 	})
 	app.Bind(basic)
 	app.Bind(containers)
+	app.Bind(toggleContainers)
 	app.Bind(checkDotEnv)
 	app.Bind(copyEnv)
 	app.Run()
