@@ -1,9 +1,11 @@
-import Dashboard from './components/dashboards/index.vue';
-import Settings from './components/settings/index.vue';
+import Dashboard from './components/dashboards/index';
+import Settings from './components/settings/index';
+import Containers from './components/containers/index'
 
 const routes = [
     {path: '/', component: Dashboard, name: "home"},
     {path: '/settings', component: Settings, name: "settings"},
+    {path: '/containers', component: Containers, name: "containers"},
     {path: '*', component: Dashboard}
 ];
 

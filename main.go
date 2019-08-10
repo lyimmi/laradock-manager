@@ -2,9 +2,8 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
 
 	"github.com/leaanthony/mewn"
@@ -25,65 +24,6 @@ func basic() string {
 	return "OK: " + out.String()
 }
 
-func checkDotEnv() bool {
-	if _, err := os.Stat("/home/lyimmi/Projects/webnetwork/laradock/.env"); err != nil {
-		return !os.IsNotExist(err)
-	}
-	return true
-}
-
-func copyEnv() bool {
-	sourceFile, err := os.Open("/home/lyimmi/Projects/webnetwork/laradock/env-example")
-	if err != nil {
-		return false
-	}
-	defer sourceFile.Close()
-
-	// Create new file
-	newFile, err := os.Create("/home/lyimmi/Projects/webnetwork/laradock/.env")
-	if err != nil {
-		return false
-	}
-	defer newFile.Close()
-
-	bytesCopied, err := io.Copy(newFile, sourceFile)
-	if err != nil {
-		return false
-	}
-	return bytesCopied > 0
-}
-
-func containers() string {
-	cmd := exec.Command("docker-compose", "ps")
-	cmd.Dir = "/home/lyimmi/Projects/webnetwork/laradock/"
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
-	}
-	return out.String()
-}
-
-func toggleContainers(state string, container string) bool {
-	cmd := exec.Command("docker-compose", state, container)
-	cmd.Dir = "/home/lyimmi/Projects/webnetwork/laradock/"
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return false
-	}
-	fmt.Println(out.String())
-	return true
-}
-
 func main() {
 
 	js := mewn.String("./frontend/dist/app.js")
@@ -98,10 +38,15 @@ func main() {
 		Colour:    "#131313",
 		Resizable: true,
 	})
-	app.Bind(basic)
-	app.Bind(containers)
-	app.Bind(toggleContainers)
-	app.Bind(checkDotEnv)
-	app.Bind(copyEnv)
+
+	vuex := NewVuexState()
+	res := VuexStore{}
+	json.Unmarshal([]byte(vuex.Read()), &res)
+	laradockPath := res.Settings["laradockPath"]
+
+	dc := NewDockerCompose(laradockPath)
+
+	app.Bind(dc)
+	app.Bind(vuex)
 	app.Run()
 }
