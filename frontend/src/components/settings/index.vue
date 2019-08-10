@@ -29,6 +29,7 @@
                       <template>
                         <v-text-field
                             v-model="dockerComposeYmlPath"
+                            :value="laradockPath"
                             label="Absolute path to laradock folder"
                             :placeholder="laradockPath"
                             :disabled="laradockPath !== '' && dockerComposeYmlPath === laradockPath"
@@ -61,12 +62,12 @@
 </template>
 
 <script>
-  import {mapGetters} from 'vuex'
-  import {mapActions} from 'vuex'
-  import dockerCompose from '../../shared/dockerCompose'
+  import {mapGetters} from "vuex"
+  import {mapActions} from "vuex"
+  import dockerCompose from "../../shared/dockerCompose"
 
   export default {
-    name: 'index',
+    name: "index",
     data() {
       return {
         dockerComposeYmlPath: "",
@@ -75,13 +76,13 @@
     },
     mixins: [dockerCompose],
     computed: {
-      ...mapGetters('Settings', [
-        'laradockPath'
+      ...mapGetters("Settings", [
+        "laradockPath"
       ])
     },
     methods: {
-      ...mapActions('Settings', [
-        'setLaradockPath'
+      ...mapActions("Settings", [
+        "setLaradockPath"
       ]),
       storeLaradockPath() {
         this.setLaradockPath(this.dockerComposeYmlPath)

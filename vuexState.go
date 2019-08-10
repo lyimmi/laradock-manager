@@ -88,13 +88,12 @@ func (t *VuexState) Write(data string) bool {
 		fmt.Println(err)
 		return false
 	}
-	l, err := f.Write(encodedData)
+	f.Write(encodedData)
 	if err != nil {
 		fmt.Println(err)
 		f.Close()
 		return false
 	}
-	fmt.Println(l, "bytes written successfully")
 	err = f.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -106,7 +105,6 @@ func (t *VuexState) Write(data string) bool {
 
 //Read Reads vuex store data from file
 func (t *VuexState) Read() string {
-	fmt.Println(string("called"))
 	data, err := ioutil.ReadFile("vuex-store.data")
 	if err != nil {
 		fmt.Println(err)

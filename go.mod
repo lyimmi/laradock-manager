@@ -1,4 +1,6 @@
-module laradock-manager
+module github.com/lyimmi/laradock-manager
+
+go 1.12
 
 require (
 	github.com/leaanthony/mewn v0.10.7

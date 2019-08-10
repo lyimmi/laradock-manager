@@ -30,7 +30,6 @@
 
     <v-app-bar app clipped-left dense fixed flat>
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Laradock manager</v-toolbar-title>
 
       <v-spacer></v-spacer>
 

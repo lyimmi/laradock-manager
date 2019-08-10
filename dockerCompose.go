@@ -115,7 +115,7 @@ func (t *DockerCompose) GetAvailableContainers() string {
 		if strings.HasPrefix(e, "  ") && !strings.HasPrefix(e, "   ") && gather {
 			e = strings.TrimSuffix(e, ":")
 			c = append(c, strings.TrimSpace(e))
-			fmt.Println(e)
+			//fmt.Println(e)
 		}
 		if strings.Contains(e, "version:") {
 			gather = false
@@ -144,7 +144,7 @@ func (t *DockerCompose) ToggleContainer(state string, container string) bool {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return false
 	}
-	fmt.Println(out.String())
+	//fmt.Println(out.String())
 	return true
 }
 

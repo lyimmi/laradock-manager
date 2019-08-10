@@ -1,49 +1,70 @@
-import {mapActions, mapGetters} from 'vuex'
+import {mapActions, mapGetters} from "vuex"
 
 export default {
   data() {
     return {
       dockerComposeStatus: null,
-      dockerError: '',
+      dockerError: "",
       dotEnv: null,
       snackbar: false,
-      snackbarText: '',
+      snackbarText: "",
       containers: [],
-      containersLoading: true
+      containersLoading: true,
+      availableContainers: []
     }
   },
   computed: {
-    ...mapGetters('Status', [
-      'appStatus'
+    ...mapGetters("Status", [
+      "appStatus"
     ]),
-    ...mapGetters('Settings', [
-      'laradockPath'
+    ...mapGetters("Settings", [
+      "laradockPath"
     ])
   },
   methods: {
-    ...mapActions('Status', [
-      'setAppStatus'
+    ...mapActions("Status", [
+      "setAppStatus"
     ]),
     waitForSettings(callback, i) {
-      i = typeof i === 'undefined' ? 0 : i
+      i = typeof i === "undefined" ? 0 : i
       if (i > 3) {
         this.$root.$emit("showError", "Laradock's path is not set. Please set it on the settings page.")
         return false
-      } else if (typeof this.laradockPath === 'undefined' || this.laradockPath === '') {
+      } else if (typeof this.laradockPath === "undefined" || this.laradockPath === "") {
         setTimeout(() => {
-          this.waitForSettings(callback, i+1)
+          this.waitForSettings(callback, i + 1)
         }, 350)
-      } else if (typeof callback === 'function') {
+      } else if (typeof callback === "function") {
         callback()
       }
     },
     applyLaradockPath(laradockPath) {
       window.backend.DockerCompose.SetLaradockPath(laradockPath)
     },
-    getAvailableContainers() {
+    getAvailableContainers(callback) {
+      let self = this
       this.waitForSettings(() => {
+        self.getContainers()
         window.backend.DockerCompose.GetAvailableContainers().then(result => {
-          console.log(JSON.parse(result))
+          let data = JSON.parse(result)
+          let containers = []
+          data.forEach((c) => {
+            let co = self.containers.find((co) => {
+              return co.code === c
+            })
+            containers.push({
+              name: c,
+              state: typeof co === "undefined" ? "DOWN" : co.state
+            })
+          })
+          containers.sort((a, b) => {
+            return ("" + b.state).localeCompare(a.state)
+          })
+          self.availableContainers = containers
+
+          if (typeof callback === "function") {
+            callback()
+          }
         })
       })
     },
@@ -52,18 +73,18 @@ export default {
         let self = this
         self.containersLoading = true
         window.backend.DockerCompose.GetContainers().then(result => {
-          if (result.startsWith('Error:')) {
+          if (result.startsWith("Error:")) {
             self.containersLoading = false
-            this.$root.$emit('showError', result)
+            this.$root.$emit("showError", result)
             return
           }
           result = JSON.parse(result)
           let containers = []
           result.forEach((line, k) => {
-            if (k > 1 && line[0] !== '') {
+            if (k > 1 && line[0] !== "") {
               containers.push({
                 name: line[0],
-                code: line[0].replace('laradock_', '').replace('_1', ''),
+                code: line[0].replace("laradock_", "").replace("_1", ""),
                 command: line[1],
                 state: line[2],
                 ports: line[3]
@@ -91,7 +112,7 @@ export default {
           if (result) {
             self.dotEnv = true
           } else {
-            self.$root.$emit('showError', 'Copy failed')
+            self.$root.$emit("showError", "Copy failed")
           }
         })
       })
