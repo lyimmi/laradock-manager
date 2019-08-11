@@ -1,5 +1,5 @@
 let cssConfig = {};
-const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
+const VuetifyLoaderPlugin = require("vuetify-loader/lib/plugin");
 
 if (process.env.NODE_ENV == "production") {
   cssConfig = {
@@ -30,9 +30,8 @@ module.exports = {
   },
   css: cssConfig,
   configureWebpack: {
-    plugins: [
-      new VuetifyLoaderPlugin()
-    ],
+    devtool: "source-map",
+    plugins: [new VuetifyLoaderPlugin()],
     output: {
       filename: "[name].js"
     },

@@ -10,11 +10,17 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/wailsapp/wails"
 )
 
 //DockerCompose DockerCompose struct
 type DockerCompose struct {
 	laradockPath        string
+	containerExec       bool
+	log                 *wails.CustomLogger
+	execOutput          string
 	availableContainers map[string]string
 }
 
@@ -71,7 +77,6 @@ func (t *DockerCompose) GetContainers() string {
 	err := cmd.Run()
 
 	if err != nil {
-		//fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
 	}
 
@@ -144,8 +149,62 @@ func (t *DockerCompose) ToggleContainer(state string, container string) bool {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return false
 	}
-	//fmt.Println(out.String())
 	return true
+}
+
+//ExecContainer Execute a docker container
+func (t *DockerCompose) ExecContainer(container string, user string) string {
+	fmt.Println("ExecContainer")
+	go func() {
+
+		cmd := exec.Command("docker-compose", "exec", "--user="+user, container, "bash")
+		cmd.Dir = filepath.Join(t.laradockPath)
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err := cmd.Run()
+
+		if err != nil {
+			fmt.Println("Error: " + fmt.Sprint(err) + ": " + stderr.String())
+			return
+		}
+
+		for {
+			if t.containerExec == false {
+				return
+			}
+			t.execOutput = out.String()
+			fmt.Println(t.execOutput)
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	return "connected"
+}
+
+//WailsInit wails init
+func (t *DockerCompose) WailsInit(runtime *wails.Runtime) error {
+	t.log = runtime.Log.New("Stats")
+	go func() {
+		for {
+			if t.containerExec == false {
+				return
+			}
+			if t.execOutput != "" {
+				runtime.Events.Emit("containerExecOutputChange", t.execOutput)
+				fmt.Println("event emitted")
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+	return nil
+}
+
+//StopExecContainer Stop the exec's g routine
+func (t *DockerCompose) StopExecContainer() string {
+	t.containerExec = false
+	return "disconnected"
 }
 
 func (t *DockerCompose) regSplit(text string, delimeter string) []string {

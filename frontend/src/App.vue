@@ -11,93 +11,85 @@
     <v-footer app>
       <small>
         <a @click="openBrowser('https://github.com/lyimmi/laradock-manager')" href="#">
-          <v-icon small>fab fa-github</v-icon>
-          https://github.com/lyimmi/laradock-manager</a>
+          <v-icon small>fab fa-github</v-icon>https://github.com/lyimmi/laradock-manager
+        </a>
       </small>
     </v-footer>
 
     <v-snackbar
-        v-for="(error, index) in errors"
-        v-model="errors[index].state"
-        color="error"
-        multi-line
-        :timeout="15000"
-        :absolute="false"
-        top
+      v-for="(error, index) in errors"
+      :key="index"
+      v-model="errors[index].state"
+      color="error"
+      multi-line
+      :timeout="15000"
+      :absolute="false"
+      top
     >
       {{ error.text }}
-      <v-btn
-          text
-          @click="hideError(index)"
-      >
-        Close
-      </v-btn>
+      <v-btn text @click="hideError(index)">Close</v-btn>
     </v-snackbar>
   </v-app>
 </template>
 
 <script>
-  import AppMenu from './components/partials/app-menu'
-  import dockerCompose from './shared/dockerCompose'
-  import {mapActions} from 'vuex'
-  import {mapGetters} from 'vuex'
+import AppMenu from "./components/partials/app-menu";
+import dockerCompose from "./shared/dockerCompose";
+import { mapActions } from "vuex";
+import { mapGetters } from "vuex";
 
-  export default {
-    name: 'app',
-    components: {AppMenu},
-    mixins: [dockerCompose],
-    created() {
-      this.$vuetify.theme.dark = true
+export default {
+  name: "app",
+  components: { AppMenu },
+  mixins: [dockerCompose],
+  created() {
+    this.$vuetify.theme.dark = true;
+  },
+  mounted() {
+    this.$router.push("home");
+    this.$root.$on("showError", error => this.addError(error));
+  },
+  data: () => ({
+    errors: []
+  }),
+  computed: {
+    ...mapGetters("Settings", ["laradockPath"])
+  },
+  methods: {
+    ...mapActions("Settings", ["setLaradockPath"]),
+    openBrowser(url) {
+      window.wails.Browser = { OpenURL: url };
     },
-    mounted() {
-      this.$router.push('home')
-      this.$root.$on('showError', error => this.addError(error))
+    addError(error) {
+      this.errors.push({
+        text: error.substring(0, 255),
+        state: true
+      });
+      this.cleanErrors();
     },
-    data: () => ({
-      errors: []
-    }),
-    computed: {
-      ...mapGetters('Settings', [
-        'laradockPath'
-      ])
+    hideError(index) {
+      this.errors[index].state = false;
+      setTimeout(() => {
+        this.cleanErrors();
+      }, 1500);
     },
-    methods: {
-      ...mapActions('Settings', [
-        'setLaradockPath'
-      ]),
-      openBrowser(url) {
-        window.wails.Browser = {OpenURL: url}
-      },
-      addError(error) {
-        this.errors.push({
-          text: error.substring(0, 255),
-          state: true
-        })
-        this.cleanErrors()
-      },
-      hideError(index) {
-        this.errors[index].state = false
-        setTimeout(() => {
-          this.cleanErrors()
-        }, 1500)
-      },
-      cleanErrors() {
-        this.errors.forEach((v, i) => {
-          if (!v.state) {
-            this.errors.splice(i, 1)
-          }
-        })
-      }
+    cleanErrors() {
+      this.errors.forEach((v, i) => {
+        if (!v.state) {
+          this.errors.splice(i, 1);
+        }
+      });
     }
   }
+};
 </script>
 
 <style>
-  .logo {
-    width: 16em;
-  }
+.logo {
+  width: 16em;
+}
 
-  a {
-    text-decoration: none;
-  }
+a {
+  text-decoration: none;
+}
 </style>
