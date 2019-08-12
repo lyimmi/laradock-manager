@@ -7,15 +7,6 @@
         <router-view></router-view>
       </transition>
     </v-content>
-
-    <v-footer app>
-      <small>
-        <a @click="openBrowser('https://github.com/lyimmi/laradock-manager')" href="#">
-          <v-icon small>fab fa-github</v-icon>https://github.com/lyimmi/laradock-manager
-        </a>
-      </small>
-    </v-footer>
-
     <v-snackbar
       v-for="(error, index) in errors"
       :key="index"

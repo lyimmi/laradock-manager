@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -77,8 +76,8 @@ func (t *Compose) CopyEnv() bool {
 	return bytesCopied > 0
 }
 
-//GetContainers run docker-compose ps and parse the output
-func (t *Compose) GetContainers() string {
+//Get run docker-compose ps and parse the output
+func (t *Compose) Get() string {
 	cmd := exec.Command("docker-compose", "ps")
 	cmd.Dir = filepath.Join(t.laradockPath)
 	var out bytes.Buffer
@@ -106,9 +105,9 @@ func (t *Compose) GetContainers() string {
 	return string(s)
 }
 
-//GetAvailableContainers run docker-compose ps and parse the output
-func (t *Compose) GetAvailableContainers() string {
-	cmd := exec.Command("docker-compose", "config")
+//GetAvailables run docker-compose ps and parse the output
+func (t *Compose) GetAvailables() string {
+	cmd := exec.Command("docker-compose", "ps", "--services")
 	cmd.Dir = filepath.Join(t.laradockPath)
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -122,33 +121,15 @@ func (t *Compose) GetAvailableContainers() string {
 
 	reg := regexp.MustCompile(`\n`)
 	lines := reg.Split(out.String(), -1)
-	var c []string
-	gather := false
-	for _, e := range lines {
-		if !gather && strings.Contains(e, "services:") {
-			gather = true
-		}
-		if strings.HasPrefix(e, "  ") && !strings.HasPrefix(e, "   ") && gather {
-			e = strings.TrimSuffix(e, ":")
-			c = append(c, strings.TrimSpace(e))
-			//fmt.Println(e)
-		}
-		if strings.Contains(e, "version:") {
-			gather = false
-			break
-		}
-
-	}
-
-	s, err := json.Marshal(c)
+	s, err := json.Marshal(lines)
 	if err != nil {
 		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
 	}
 	return string(s)
 }
 
-//ToggleContainer Toggle a container on and off
-func (t *Compose) ToggleContainer(state string, container string) bool {
+//Toggle Toggle a container on and off
+func (t *Compose) Toggle(state string, container string) bool {
 	cmd := exec.Command("docker-compose", state, container)
 	cmd.Dir = t.laradockPath
 	var out bytes.Buffer
@@ -163,8 +144,44 @@ func (t *Compose) ToggleContainer(state string, container string) bool {
 	return true
 }
 
-//ExecContainer Execute a docker container
-func (t *Compose) ExecContainer(container string, user string) {
+//Up Up a container
+func (t *Compose) Up(container string) bool {
+	cmd := exec.Command("docker-compose", "up", "-d", "--no-build", container)
+	cmd.Dir = t.laradockPath
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return false
+	}
+	return true
+}
+
+//Build Build a container
+func (t *Compose) Build(container string, force bool) bool {
+	cmd := exec.Command("docker-compose", "build", container)
+	if force == true {
+		cmd = exec.Command("docker-compose", "build", "--no-cache", container)
+	}
+
+	cmd.Dir = t.laradockPath
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return false
+	}
+	return true
+}
+
+//Exec Execute a docker container
+func (t *Compose) Exec(container string, user string) {
 	t.containerExec = true
 	fmt.Println("connecting composer exec")
 	stopExecChanel := make(chan bool)
@@ -181,8 +198,8 @@ func (t *Compose) ExecContainer(container string, user string) {
 	}
 }
 
-//StopExecContainer Stop the exec's g routine
-func (t *Compose) StopExecContainer() string {
+//StopExec Stop the exec's g routine
+func (t *Compose) StopExec() string {
 	t.containerExec = false
 	fmt.Println("disconnect signal reveived")
 	return "disconnected"
