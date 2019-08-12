@@ -40,13 +40,13 @@ export default {
       }
     },
     applyLaradockPath(laradockPath) {
-      window.backend.DockerCompose.SetLaradockPath(laradockPath);
+      window.backend.Compose.SetLaradockPath(laradockPath);
     },
     getAvailableContainers(callback) {
       let self = this;
       this.waitForSettings(() => {
         self.getContainers();
-        window.backend.DockerCompose.GetAvailableContainers().then(result => {
+        window.backend.Compose.GetAvailableContainers().then(result => {
           let data = JSON.parse(result);
           let containers = [];
           data.forEach(c => {
@@ -73,7 +73,7 @@ export default {
       this.waitForSettings(() => {
         let self = this;
         self.containersLoading = true;
-        window.backend.DockerCompose.GetContainers().then(result => {
+        window.backend.Compose.GetContainers().then(result => {
           if (result.startsWith("Error:")) {
             self.containersLoading = false;
             this.$root.$emit("showError", result);
@@ -101,7 +101,7 @@ export default {
     checkDotEnv() {
       this.waitForSettings(() => {
         let self = this;
-        window.backend.DockerCompose.CheckDotEnv().then(result => {
+        window.backend.Compose.CheckDotEnv().then(result => {
           self.dotEnv = result;
           self.setAppStatus({ dotEnv: result });
         });
@@ -110,7 +110,7 @@ export default {
     copyFromExample() {
       this.waitForSettings(() => {
         let self = this;
-        window.backend.DockerCompose.CopyEnv().then(result => {
+        window.backend.Compose.CopyEnv().then(result => {
           if (result) {
             self.dotEnv = true;
           } else {
@@ -123,27 +123,25 @@ export default {
       this.loadingContainer = container;
       this.waitForSettings(() => {
         this.containersLoading = true;
-        window.backend.DockerCompose.ToggleContainer(state, container).then(
-          () => {
-            if (typeof availalbe !== "undefined" && availalbe === true) {
-              this.getAvailableContainers();
-            } else {
-              this.getContainers();
-            }
-            this.loadingContainer = "";
+        window.backend.Compose.ToggleContainer(state, container).then(() => {
+          if (typeof availalbe !== "undefined" && availalbe === true) {
+            this.getAvailableContainers();
+          } else {
+            this.getContainers();
           }
-        );
+          this.loadingContainer = "";
+        });
       });
     },
     execContainer(container, user, callback) {
-      window.backend.DockerCompose.ExecContainer(container, user).then(res => {
-        if (res === "connected" && typeof callback === "function") {
+      window.backend.Compose.ExecContainer(container, user).then(() => {
+        if (typeof callback === "function") {
           callback();
         }
       });
     },
     stopExecContiner(callback) {
-      window.backend.DockerCompose.StopExecContainer().then(res => {
+      window.backend.Compose.StopExecContainer().then(res => {
         if (res === "disconnected" && typeof callback === "function") {
           callback();
         }

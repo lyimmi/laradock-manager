@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os/exec"
 
+	"laradock-manager/docker"
+
 	"github.com/leaanthony/mewn"
 	"github.com/wailsapp/wails"
 )
@@ -44,7 +46,7 @@ func main() {
 	json.Unmarshal([]byte(vuex.Read()), &res)
 	laradockPath := res.Settings["laradockPath"]
 
-	dc := NewDockerCompose(laradockPath)
+	dc := docker.NewDockerCompose(laradockPath)
 
 	app.Bind(dc)
 	app.Bind(vuex)

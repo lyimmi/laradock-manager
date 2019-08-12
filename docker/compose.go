@@ -1,4 +1,4 @@
-package main
+package docker
 
 import (
 	"bytes"
@@ -11,33 +11,44 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/wailsapp/wails"
 )
 
-//DockerCompose DockerCompose struct
-type DockerCompose struct {
+//Compose DockerCompose struct
+type Compose struct {
 	laradockPath        string
 	containerExec       bool
-	log                 *wails.CustomLogger
-	execOutput          string
+	containerConnected  bool
 	availableContainers map[string]string
 }
 
+// //WailsInit wails init
+// func (t *Compose) WailsInit(runtime *wails.Runtime) error {
+// 	go func() {
+// 		for {
+// 			if t.containerExec == true && t.containerConnected == true {
+// 				runtime.Events.Emit("containerExecOutputChange", "connected")
+// 				fmt.Println("event emitted")
+// 			} else if t.containerExec == false && t.containerConnected == true {
+// 			time.Sleep(1 * time.Second)
+// 		}
+// 	}()
+// 	return nil
+// }
+
 //NewDockerCompose Create a new DockerCompose struct
-func NewDockerCompose(path string) *DockerCompose {
-	result := &DockerCompose{laradockPath: path}
+func NewDockerCompose(path string) *Compose {
+	result := &Compose{laradockPath: path}
 	return result
 }
 
 //SetLaradockPath Check if .env file exists
-func (t *DockerCompose) SetLaradockPath(path string) bool {
+func (t *Compose) SetLaradockPath(path string) bool {
 	t.laradockPath = path
 	return true
 }
 
 //CheckDotEnv Check if .env file exists
-func (t *DockerCompose) CheckDotEnv() bool {
+func (t *Compose) CheckDotEnv() bool {
 	if _, err := os.Stat(filepath.Join(t.laradockPath, ".env")); err != nil {
 		return !os.IsNotExist(err)
 	}
@@ -45,7 +56,7 @@ func (t *DockerCompose) CheckDotEnv() bool {
 }
 
 //CopyEnv Make the .env file form env-example
-func (t *DockerCompose) CopyEnv() bool {
+func (t *Compose) CopyEnv() bool {
 	sourceFile, err := os.Open(filepath.Join(t.laradockPath, "env-example"))
 	if err != nil {
 		return false
@@ -67,7 +78,7 @@ func (t *DockerCompose) CopyEnv() bool {
 }
 
 //GetContainers run docker-compose ps and parse the output
-func (t *DockerCompose) GetContainers() string {
+func (t *Compose) GetContainers() string {
 	cmd := exec.Command("docker-compose", "ps")
 	cmd.Dir = filepath.Join(t.laradockPath)
 	var out bytes.Buffer
@@ -96,7 +107,7 @@ func (t *DockerCompose) GetContainers() string {
 }
 
 //GetAvailableContainers run docker-compose ps and parse the output
-func (t *DockerCompose) GetAvailableContainers() string {
+func (t *Compose) GetAvailableContainers() string {
 	cmd := exec.Command("docker-compose", "config")
 	cmd.Dir = filepath.Join(t.laradockPath)
 	var out bytes.Buffer
@@ -137,7 +148,7 @@ func (t *DockerCompose) GetAvailableContainers() string {
 }
 
 //ToggleContainer Toggle a container on and off
-func (t *DockerCompose) ToggleContainer(state string, container string) bool {
+func (t *Compose) ToggleContainer(state string, container string) bool {
 	cmd := exec.Command("docker-compose", state, container)
 	cmd.Dir = t.laradockPath
 	var out bytes.Buffer
@@ -153,61 +164,31 @@ func (t *DockerCompose) ToggleContainer(state string, container string) bool {
 }
 
 //ExecContainer Execute a docker container
-func (t *DockerCompose) ExecContainer(container string, user string) string {
-	fmt.Println("ExecContainer")
+func (t *Compose) ExecContainer(container string, user string) {
+	t.containerExec = true
+	fmt.Println("connecting composer exec")
+	stopExecChanel := make(chan bool)
 	go func() {
-
-		cmd := exec.Command("docker-compose", "exec", "--user="+user, container, "bash")
-		cmd.Dir = filepath.Join(t.laradockPath)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err := cmd.Run()
-
-		if err != nil {
-			fmt.Println("Error: " + fmt.Sprint(err) + ": " + stderr.String())
+		containerExec(user, container, t.laradockPath, stopExecChanel)
+	}()
+	for {
+		if t.containerExec == false {
+			fmt.Println("disconnecting exec")
+			close(stopExecChanel)
 			return
 		}
-
-		for {
-			if t.containerExec == false {
-				return
-			}
-			t.execOutput = out.String()
-			fmt.Println(t.execOutput)
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	return "connected"
-}
-
-//WailsInit wails init
-func (t *DockerCompose) WailsInit(runtime *wails.Runtime) error {
-	t.log = runtime.Log.New("Stats")
-	go func() {
-		for {
-			if t.containerExec == false {
-				return
-			}
-			if t.execOutput != "" {
-				runtime.Events.Emit("containerExecOutputChange", t.execOutput)
-				fmt.Println("event emitted")
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
-	return nil
+		time.Sleep(1 * time.Second)
+	}
 }
 
 //StopExecContainer Stop the exec's g routine
-func (t *DockerCompose) StopExecContainer() string {
+func (t *Compose) StopExecContainer() string {
 	t.containerExec = false
+	fmt.Println("disconnect signal reveived")
 	return "disconnected"
 }
 
-func (t *DockerCompose) regSplit(text string, delimeter string) []string {
+func (t *Compose) regSplit(text string, delimeter string) []string {
 	reg := regexp.MustCompile(delimeter)
 	indexes := reg.FindAllStringIndex(text, -1)
 	laststart := 0

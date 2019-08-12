@@ -1,15 +1,6 @@
 
 <template>
   <div>
-    <v-dialog v-model="loaderDialog" hide-overlay persistent width="300">
-      <v-card>
-        <v-card-text>
-          Connecting to container, please stand by
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
     <v-layout justify-center wrap>
       <v-dialog
         v-model="conainerExecDialog"
@@ -25,20 +16,19 @@
             </v-btn>
             <v-toolbar-title>Executing container: {{executableContiner}}</v-toolbar-title>
           </v-toolbar>
-          <v-card-text style="min-height:calc(100% - 48px)">
+          <v-card-text style="height:100%">
             <v-container grid-list-sm style="height:100%">
-              <v-layout style="height:90%">
+              <v-layout style="height:100%">
                 <v-flex xs12>
-                  <v-sheet
-                    style="height:100%;"
-                    class="pa-5"
-                    color="grey darken-4"
-                  >{{containerContent}}</v-sheet>
-                </v-flex>
-              </v-layout>
-              <v-layout>
-                <v-flex xs12>
-                  <v-text-field autofocus label="Command" outlined background-color="grey darken-4"></v-text-field>
+                  <iframe
+                    v-if="conainerExecDialog"
+                    src="http://0.0.0.0:5000/"
+                    border="0"
+                    height="100%"
+                    width="100%"
+                    style="border: 1px solid #2b2b2b"
+                    id="containerExecConsole"
+                  ></iframe>
                 </v-flex>
               </v-layout>
             </v-container>
@@ -52,7 +42,7 @@
         <v-card>
           <v-card-title>Executing container: {{executableContiner}}</v-card-title>
           <v-card-text>
-            <v-select :items="select" v-model="selectedUser" label="User" item-value="text"></v-select>
+            <v-text-field v-model="selectedUser" label="User"></v-text-field>
           </v-card-text>
           <v-card-actions>
             <v-btn color="primary" text @click="selectUserDialog = false">Cancel</v-btn>
@@ -60,7 +50,7 @@
             <v-btn
               color="primary"
               text
-              @click="loaderDialog= true; conainerExecDialog = true;  selectUserDialog = false"
+              @click="conainerExecDialog = true;  selectUserDialog = false"
             >Ok</v-btn>
           </v-card-actions>
         </v-card>
@@ -90,10 +80,8 @@ export default {
       executableContiner: "",
       conainerExecDialog: false,
       containerContent: "",
-      loaderDialog: false,
       selectUserDialog: false,
-      selectedUser: { text: "laradock" },
-      select: [{ text: "root" }, { text: "laradock" }]
+      selectedUser: ""
     };
   },
   methods: {},
@@ -104,17 +92,19 @@ export default {
         this.stopExecContiner(() => {
           this.executableContiner = "";
           this.containerContent = "";
-          this.selectedUser = { text: "laradock" };
+          this.selectedUser = "";
+          document.getElementById("inspire").setAttribute("style", "");
         });
       } else if (current === true && this.executableContiner !== "") {
-        console.log(this.executableContiner, this.selectedUser.text);
+        console.log(this.executableContiner, this.selectedUser);
         console.log("container started");
+        document
+          .getElementById("inspire")
+          .setAttribute("style", "height:100px; overflow: hidden;");
         this.execContainer(
           this.executableContiner,
-          this.selectedUser.text,
-          () => {
-            this.loaderDialog = false;
-          }
+          this.selectedUser,
+          () => {}
         );
       }
     }
