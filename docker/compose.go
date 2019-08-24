@@ -147,6 +147,22 @@ func (t *Compose) Toggle(state string, container string) bool {
 	return true
 }
 
+//Down Down all the containers
+func (t *Compose) Down() bool {
+	cmd := exec.Command("docker-compose", "down")
+	cmd.Dir = t.laradockPath
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return false
+	}
+	return true
+}
+
 //Up Up a container
 func (t *Compose) Up(container string) bool {
 	cmd := exec.Command("docker-compose", "up", "-d", "--no-build", container)

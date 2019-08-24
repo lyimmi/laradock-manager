@@ -20,6 +20,14 @@ export default {
     ...mapGetters("Status", ["appStatus"]),
     ...mapGetters("Settings", ["laradockPath"])
   },
+  mounted() {
+    this.$root.$on("containersLoading", () => {
+      this.containersLoading = true;
+    });
+    this.$root.$on("containersNotLoading", () => {
+      this.containersLoading = false;
+    });
+  },
   methods: {
     ...mapActions("Status", ["setAppStatus"]),
     waitForSettings(callback, i) {
@@ -47,39 +55,40 @@ export default {
     getAvailableContainers(callback) {
       let self = this;
       this.waitForSettings(() => {
-        self.getContainers();
-        window.backend.Compose.GetAvailables().then(result => {
-          let data = JSON.parse(result);
-          let containers = [];
-          data.forEach(c => {
-            if (c !== "") {
-              let co = self.containers.find(co => {
-                return co.code === c;
-              });
-              containers.push({
-                name: c,
-                state: typeof co === "undefined" ? "DOWN" : co.state
-              });
+        self.getContainers(() => {
+          window.backend.Compose.GetAvailables().then(result => {
+            let data = JSON.parse(result);
+            let containers = [];
+            data.forEach(c => {
+              if (c !== "") {
+                let co = self.containers.find(co => {
+                  return co.code === c;
+                });
+                containers.push({
+                  name: c,
+                  state: typeof co === "undefined" ? "DOWN" : co.state
+                });
+              }
+            });
+            containers.sort((a, b) => {
+              return ("" + b.state).localeCompare(a.state);
+            });
+            self.availableContainers = containers;
+            self.$root.$emit("resetRefreshConter");
+            if (typeof callback === "function") {
+              callback();
             }
           });
-          containers.sort((a, b) => {
-            return ("" + b.state).localeCompare(a.state);
-          });
-          self.availableContainers = containers;
-          self.$root.$emit("resetRefreshConter");
-          if (typeof callback === "function") {
-            callback();
-          }
         });
       });
     },
-    getContainers() {
+    getContainers(callback) {
       this.waitForSettings(() => {
         let self = this;
-        self.containersLoading = true;
+        self.$root.$emit("containersLoading");
         window.backend.Compose.Get().then(result => {
           if (result.startsWith("Error:")) {
-            self.containersLoading = false;
+            self.$root.$emit("containersNotLoading");
             this.$root.$emit("showError", result);
             return;
           }
@@ -97,8 +106,12 @@ export default {
             }
           });
           self.containers = containers;
-          self.containersLoading = false;
+          self.$root.$emit("containersNotLoading");
           self.$root.$emit("resetRefreshConter");
+          if (typeof callback === "function") {
+            self.$root.$emit("containersLoading");
+            callback();
+          }
         });
       });
     },
@@ -142,9 +155,7 @@ export default {
         Object.keys(data).forEach(e => {
           sData += e + "=" + data[e] + "\n";
         });
-        window.backend.Compose.SaveDotEnvContent(sData).then(result => {
-          console.log(result);
-        });
+        window.backend.Compose.SaveDotEnvContent(sData).then(() => {});
       });
     },
     copyFromExample() {
@@ -159,51 +170,60 @@ export default {
         });
       });
     },
-    toggleContainer(state, container, availalbe) {
+    toggleContainer(state, container) {
       this.loadingContainer = container;
       this.waitForSettings(() => {
-        this.containersLoading = true;
+        let self = this;
+        self.$root.$emit("containersLoading");
         window.backend.Compose.Toggle(state, container).then(() => {
-          if (typeof availalbe !== "undefined" && availalbe === true) {
-            this.getAvailableContainers();
-          } else {
-            this.getContainers();
-          }
-          this.loadingContainer = "";
+          self.$root.$emit("refreshData");
+          self.loadingContainer = "";
         });
       });
     },
     upContainer(container) {
       this.waitForSettings(() => {
-        this.containersLoading = true;
+        this.$root.$emit("containersLoading");
         window.backend.Compose.Up(container).then(res => {
           if (res) {
-            this.getAvailableContainers();
+            self.$root.$emit("refreshData");
           } else {
-            this.$root.$emit(
+            self.$root.$emit(
               "showError",
               "Container cannot be uppped. Try building it first!"
             );
           }
-          this.loadingContainer = "";
+          self.loadingContainer = "";
         });
       });
     },
-
+    downContainers() {
+      this.waitForSettings(() => {
+        this.$root.$emit("containersLoading");
+        window.backend.Compose.Down().then(res => {
+          if (res) {
+            self.$root.$emit("refreshData");
+          } else {
+            self.$root.$emit("showError", "Container cannot be downed.");
+          }
+        });
+      });
+    },
     buildContainer(container, force) {
       force = typeof force === "undefined" ? false : true;
+      let self = this;
       this.waitForSettings(() => {
-        this.containersLoading = true;
+        this.$root.$emit("containersLoading");
         window.backend.Compose.Build(container, force).then(res => {
           if (res) {
-            this.getAvailableContainers();
+            self.$root.$emit("refreshData");
           } else {
-            this.$root.$emit(
+            self.$root.$emit(
               "showError",
               "Container cannot be uppped. Try building it first!"
             );
           }
-          this.loadingContainer = "";
+          self.loadingContainer = "";
         });
       });
     },

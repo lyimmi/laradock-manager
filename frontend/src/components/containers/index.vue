@@ -5,7 +5,10 @@
       <v-flex xs12>
         <v-card class="mx-auto" :loading="containersLoading">
           <v-card-title>
-            Containers
+            Containers &nbsp;
+            <v-btn icon small @click="downContainers()">
+              <v-icon>fas fa-arrow-down</v-icon>
+            </v-btn>
             <v-spacer></v-spacer>
             <v-text-field
               v-model="search"
@@ -57,13 +60,15 @@ export default {
     };
   },
   mounted() {
+    this.$root.$emit("containersLoading");
     this.getAvailableContainers(() => {
-      this.containersLoading = false;
+      this.$root.$emit("containersNotLoading");
     });
+
     this.$root.$on("refreshData", () => {
-      this.containersLoading = true;
+      this.$root.$emit("containersLoading");
       this.getAvailableContainers(() => {
-        this.containersLoading = false;
+        this.$root.$emit("containersNotLoading");
       });
     });
   },
