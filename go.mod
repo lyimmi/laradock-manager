@@ -3,6 +3,7 @@ module laradock-manager
 go 1.12
 
 require (
+	github.com/joho/godotenv v1.3.0
 	github.com/kr/pty v1.1.1
 	github.com/leaanthony/mewn v0.10.7
 	github.com/wailsapp/wails v0.17.0

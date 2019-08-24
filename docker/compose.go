@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 //Compose DockerCompose struct
@@ -203,6 +206,37 @@ func (t *Compose) StopExec() string {
 	t.containerExec = false
 	fmt.Println("disconnect signal reveived")
 	return "disconnected"
+}
+
+//DotEnvContent Return dot env contents
+func (t *Compose) DotEnvContent() map[string]string {
+	env, err := godotenv.Read(filepath.Join(t.laradockPath, ".env"))
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	return env
+}
+
+type envStruck struct {
+}
+
+//SaveDotEnvContent save dot env contents
+func (t *Compose) SaveDotEnvContent(data string) bool {
+	f, err := os.Create(filepath.Join(t.laradockPath, ".env"))
+	if err != nil {
+		fmt.Println(fmt.Sprint(err))
+		return false
+	}
+	defer f.Close()
+
+	n, err := f.WriteString(data)
+	if err != nil {
+		fmt.Println(fmt.Sprint(err))
+		return false
+	}
+	fmt.Printf("wrote %d bytes\n", n)
+	f.Sync()
+	return true
 }
 
 func (t *Compose) regSplit(text string, delimeter string) []string {

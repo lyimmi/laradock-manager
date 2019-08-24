@@ -11,7 +11,9 @@ export default {
       containers: [],
       containersLoading: true,
       availableContainers: [],
-      loadingContainer: ""
+      loadingContainer: "",
+      dotEnvContents: {},
+      dotEnvContentGroups: {}
     };
   },
   computed: {
@@ -106,6 +108,42 @@ export default {
         window.backend.Compose.CheckDotEnv().then(result => {
           self.dotEnv = result;
           self.setAppStatus({ dotEnv: result });
+        });
+      });
+    },
+    getDotEnv(callback) {
+      this.waitForSettings(() => {
+        let self = this;
+        window.backend.Compose.DotEnvContent().then(result => {
+          let groups = {};
+          Object.keys(result).forEach(k => {
+            let group = k.split("_", 1)[0];
+            if (typeof groups[group] === "undefined") {
+              groups[group] = [];
+            }
+            groups[group].push({
+              field: k,
+              value: result[k],
+              fieldName: k.split(group + "_").pop()
+            });
+          });
+          self.dotEnvContents = result;
+          self.dotEnvContentGroups = groups;
+          if (typeof callback !== "undefined") {
+            callback();
+          }
+        });
+      });
+    },
+    writeDotEnv(data) {
+      this.waitForSettings(() => {
+        // let self = this;
+        let sData = "";
+        Object.keys(data).forEach(e => {
+          sData += e + "=" + data[e] + "\n";
+        });
+        window.backend.Compose.SaveDotEnvContent(sData).then(result => {
+          console.log(result);
         });
       });
     },
