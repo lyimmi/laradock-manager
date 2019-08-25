@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -63,45 +64,49 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Launches /bin/bash and starts serving it via the terminal
 func onShell(w http.ResponseWriter, r *http.Request, user string, container string, lpath string, ch chan bool) {
 	wsHandler := func(ws *websocket.Conn) {
-		// wrap the websocket into UTF-8 wrappers:
-		wrapper := NewWebSockWrapper(ws, WebSocketTextMode)
-		stdout := wrapper
-		stderr := wrapper
 
-		// this one is optional (solves some weird issues with vim running under shell)
-		stdin := &InputWrapper{ws}
-
-		cmd := exec.Command("docker-compose", "exec", container, "bash")
-		if user != "" {
-			cmd = exec.Command("docker-compose", "exec", "--user="+user, container, "bash")
-		}
-		cmd.Dir = filepath.Join(lpath)
-		tty, err := pty.Start(cmd)
-		if err != nil {
-			panic(err)
-		}
-		defer tty.Close()
-
-		// pipe to/fro websocket to the TTY:
+		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
-			io.Copy(stdout, tty)
-		}()
-		go func() {
-			io.Copy(stderr, tty)
-		}()
-		go func() {
-			io.Copy(tty, stdin)
-		}()
-		// wait for the command to exit, then close the websocket
-		// cmd.Wait()
+			// wrap the websocket into UTF-8 wrappers:
+			wrapper := NewWebSockWrapper(ws, WebSocketTextMode)
+			stdout := wrapper
+			stderr := wrapper
 
+			// this one is optional (solves some weird issues with vim running under shell)
+			stdin := &InputWrapper{ws}
+
+			cmd := exec.CommandContext(ctx, "docker-compose", "exec", container, "bash")
+			if user != "" {
+				cmd = exec.CommandContext(ctx, "docker-compose", "exec", "--user="+user, container, "bash")
+			}
+			cmd.Dir = filepath.Join(lpath)
+			tty, err := pty.Start(cmd)
+			if err != nil {
+				panic(err)
+			}
+			defer tty.Close()
+
+			// pipe to/fro websocket to the TTY:
+			go func() {
+				io.Copy(stdout, tty)
+			}()
+			go func() {
+				io.Copy(stderr, tty)
+			}()
+			go func() {
+				io.Copy(tty, stdin)
+			}()
+			// wait for the command to exit, then close the websocket
+			cmd.Wait()
+		}()
 		for {
 			select {
 			default:
 				time.Sleep(1 * time.Second)
 			case <-ch:
-				// stop
+				cancel()
 				return
+				// stop
 			}
 		}
 	}
