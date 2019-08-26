@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"laradock-manager/docker"
+	"github.com/lyimmi/laradock-manager/docker"
 
 	"github.com/leaanthony/mewn"
 

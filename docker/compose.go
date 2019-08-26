@@ -282,7 +282,13 @@ func (t *Compose) SaveDotEnvContent(data string) bool {
 		return false
 	}
 	fmt.Printf("wrote %d bytes\n", n)
-	f.Sync()
+
+	err = f.Sync()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err))
+		return false
+	}
+
 	return true
 }
 
