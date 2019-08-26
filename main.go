@@ -1,30 +1,13 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"os/exec"
-
 	"laradock-manager/docker"
 
 	"github.com/leaanthony/mewn"
+
 	"github.com/wailsapp/wails"
 )
-
-func basic() string {
-	cmd := exec.Command("docker-compose", "--version")
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
-	}
-	return "OK: " + out.String()
-}
 
 func main() {
 
@@ -43,12 +26,20 @@ func main() {
 
 	vuex := NewVuexState()
 	res := VuexStore{}
-	json.Unmarshal([]byte(vuex.Read()), &res)
+	err := json.Unmarshal([]byte(vuex.Read()), &res)
+	if err != nil {
+		panic(err)
+	}
 	laradockPath := res.Settings["laradockPath"]
 
 	dc := docker.NewDockerCompose(laradockPath)
 
 	app.Bind(dc)
 	app.Bind(vuex)
-	app.Run()
+
+	err = app.Run()
+
+	if err != nil {
+		panic(err)
+	}
 }

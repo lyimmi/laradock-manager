@@ -6,6 +6,8 @@ export default {
       dockerComposeStatus: null,
       dockerError: "",
       dotEnv: null,
+      dockerVersion: "",
+      dockerComposeVersion: "",
       snackbar: false,
       snackbarText: "",
       containers: [],
@@ -30,6 +32,13 @@ export default {
   },
   methods: {
     ...mapActions("Status", ["setAppStatus"]),
+
+    /**
+     * Wait for wails to load settings to store
+     *
+     * @param {*} callback
+     * @param {*} i
+     */
     waitForSettings(callback, i) {
       i = typeof i === "undefined" ? 0 : i;
       if (i > 3) {
@@ -49,14 +58,27 @@ export default {
         callback();
       }
     },
+
+    /**
+     * Apply laradock path to backend
+     *
+     * @param {*} laradockPath
+     */
     applyLaradockPath(laradockPath) {
       window.backend.Compose.SetLaradockPath(laradockPath);
     },
+
+    /**
+     * Get all available containers
+     *
+     * @param {*} callback
+     */
     getAvailableContainers(callback) {
       let self = this;
       this.waitForSettings(() => {
         self.getContainers(() => {
           window.backend.Compose.GetAvailables().then(result => {
+            // Parse response into an object for the table
             let data = JSON.parse(result);
             let containers = [];
             data.forEach(c => {
@@ -70,6 +92,7 @@ export default {
                 });
               }
             });
+            // Sort by built containers
             containers.sort((a, b) => {
               return ("" + b.state).localeCompare(a.state);
             });
@@ -82,6 +105,10 @@ export default {
         });
       });
     },
+
+    /**
+     * Get built containers
+     */
     getContainers(callback) {
       this.waitForSettings(() => {
         let self = this;
@@ -115,6 +142,10 @@ export default {
         });
       });
     },
+
+    /**
+     * Check if the .env file exists
+     */
     checkDotEnv() {
       this.waitForSettings(() => {
         let self = this;
@@ -124,6 +155,44 @@ export default {
         });
       });
     },
+
+    /**
+     * Check docker executable's version
+     */
+    checkDockerVersion() {
+      this.waitForSettings(() => {
+        let self = this;
+        window.backend.Compose.CheckDockerVersion().then(result => {
+          let sPartial = "Docker version ";
+          let v = result.startsWith(sPartial)
+            ? result.replace(sPartial, "")
+            : "";
+          self.dockerVersion = v;
+        });
+      });
+    },
+
+    /**
+     * Check docker-compose executable's version
+     */
+    checkDockerComposeVersion() {
+      this.waitForSettings(() => {
+        let self = this;
+        window.backend.Compose.CheckDockerComposeVersion().then(result => {
+          let sPartial = "docker-compose version ";
+          let v = result.startsWith(sPartial)
+            ? result.replace(sPartial, "")
+            : "";
+          self.dockerComposeVersion = v;
+        });
+      });
+    },
+
+    /**
+     * Get .env file's contents
+     *
+     * @param {*} callback
+     */
     getDotEnv(callback) {
       this.waitForSettings(() => {
         let self = this;
@@ -148,6 +217,12 @@ export default {
         });
       });
     },
+
+    /**
+     * Write .env file's content
+     *
+     * @param {*} data
+     */
     writeDotEnv(data) {
       this.waitForSettings(() => {
         // let self = this;
@@ -158,6 +233,10 @@ export default {
         window.backend.Compose.SaveDotEnvContent(sData).then(() => {});
       });
     },
+
+    /**
+     * Copy .env file from the example file
+     */
     copyFromExample() {
       this.waitForSettings(() => {
         let self = this;
@@ -170,6 +249,13 @@ export default {
         });
       });
     },
+
+    /**
+     * Toggle a continer on/off
+     *
+     * @param {*} state
+     * @param {*} container
+     */
     toggleContainer(state, container) {
       this.loadingContainer = container;
       this.waitForSettings(() => {
@@ -181,6 +267,12 @@ export default {
         });
       });
     },
+
+    /**
+     * Up a container
+     *
+     * @param {*} container
+     */
     upContainer(container) {
       this.waitForSettings(() => {
         this.$root.$emit("containersLoading");
@@ -197,6 +289,10 @@ export default {
         });
       });
     },
+
+    /**
+     * Down all containers
+     */
     downContainers() {
       this.waitForSettings(() => {
         this.$root.$emit("containersLoading");
@@ -209,6 +305,10 @@ export default {
         });
       });
     },
+
+    /**
+     * Build a container
+     */
     buildContainer(container, force) {
       force = typeof force === "undefined" ? false : true;
       let self = this;
@@ -227,6 +327,14 @@ export default {
         });
       });
     },
+
+    /**
+     * Call docker-compose exec on a container
+     *
+     * @param {*} container
+     * @param {*} user
+     * @param {*} callback
+     */
     execContainer(container, user, callback) {
       window.backend.Compose.Exec(container, user).then(() => {
         if (typeof callback === "function") {
@@ -234,6 +342,12 @@ export default {
         }
       });
     },
+
+    /**
+     * Stop container exec
+     *
+     * @param {*} callback
+     */
     stopExecContiner(callback) {
       window.backend.Compose.StopExec().then(res => {
         if (res === "disconnected" && typeof callback === "function") {

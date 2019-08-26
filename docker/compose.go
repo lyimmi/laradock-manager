@@ -23,6 +23,10 @@ type Compose struct {
 	availableContainers map[string]string
 }
 
+// envStruct
+type envStruck struct {
+}
+
 // //WailsInit wails init
 // func (t *Compose) WailsInit(runtime *wails.Runtime) error {
 // 	go func() {
@@ -55,6 +59,36 @@ func (t *Compose) CheckDotEnv() bool {
 		return !os.IsNotExist(err)
 	}
 	return true
+}
+
+//CheckDockerVersion Check the docker executable's version
+func (t *Compose) CheckDockerVersion() string {
+	cmd := exec.Command("docker", "-v")
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+
+	if err != nil {
+		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
+	}
+	return out.String()
+}
+
+//CheckDockerComposeVersion Check the docker-compose executable's version
+func (t *Compose) CheckDockerComposeVersion() string {
+	cmd := exec.Command("docker-compose", "-v")
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+
+	if err != nil {
+		return "Error: " + fmt.Sprint(err) + ": " + stderr.String()
+	}
+	return out.String()
 }
 
 //CopyEnv Make the .env file form env-example
@@ -108,7 +142,7 @@ func (t *Compose) Get() string {
 	return string(s)
 }
 
-//GetAvailables run docker-compose ps and parse the output
+//GetAvailables run docker-compose ps --services and parse the output
 func (t *Compose) GetAvailables() string {
 	cmd := exec.Command("docker-compose", "ps", "--services")
 	cmd.Dir = filepath.Join(t.laradockPath)
@@ -231,9 +265,6 @@ func (t *Compose) DotEnvContent() map[string]string {
 		log.Fatal("Error loading .env file")
 	}
 	return env
-}
-
-type envStruck struct {
 }
 
 //SaveDotEnvContent save dot env contents
