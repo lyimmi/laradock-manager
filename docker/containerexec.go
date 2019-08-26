@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	webAssetsDir = "www"
+	webAssetsDir = "docker/www"
 	listenAddr   = "0.0.0.0:5000"
 )
 
