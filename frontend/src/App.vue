@@ -37,21 +37,13 @@
           <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
 
           <v-spacer></v-spacer>
+          <v-switch
+              inset
+              style="height: 22px;"
+              color="primary"
+              v-model="$vuetify.theme.dark"
+          ></v-switch>
 
-          <v-menu left bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn icon v-on="on">
-                <v-icon>notifications</v-icon>
-              </v-btn>
-            </template>
-
-            <v-list width="250px" disabled>
-              <v-subheader>STATUS</v-subheader>
-              <v-list-item v-for="n in 5" :key="n" @click="() => {}">
-                <v-list-item-title>Option {{ n }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
           <v-btn icon @click="$root.$emit('refreshData')" prevent>
             <v-icon>refresh</v-icon>
             <div style="position: absolute;font-size: 9px;bottom: -7px;">{{60-refreshCounter}}</div>
@@ -62,20 +54,23 @@
     <!-- menu end -->
     <!-- content start -->
     <v-content>
-      <transition>
+      <transition
+          name="fade"
+          mode="out-in"
+      >
         <router-view></router-view>
       </transition>
     </v-content>
     <!-- content end -->
     <v-snackbar
-      v-for="(error, index) in errors"
-      :key="index"
-      v-model="errors[index].state"
-      color="error"
-      multi-line
-      :timeout="15000"
-      :absolute="false"
-      top
+        v-for="(error, index) in errors"
+        :key="index"
+        v-model="errors[index].state"
+        color="error"
+        multi-line
+        :timeout="15000"
+        :absolute="false"
+        top
     >
       {{ error.text }}
       <v-btn text @click="hideError(index)">Close</v-btn>
@@ -84,78 +79,115 @@
 </template>
 
 <script>
-//import AppMenu from "./components/partials/app-menu";
-import dockerCompose from "./shared/dockerCompose";
-import { mapActions } from "vuex";
-import { mapGetters } from "vuex";
+  //import AppMenu from "./components/partials/app-menu";
+  import dockerCompose from "./shared/dockerCompose"
+  import {mapActions, mapGetters} from "vuex"
 
-export default {
-  name: "app",
-  //components: { AppMenu },
-  mixins: [dockerCompose],
-  created() {
-    this.$vuetify.theme.dark = true;
-  },
-  mounted() {
-    //Data refresh
-    setInterval(() => {
-      this.refreshCounter++;
-      if (this.refreshCounter === 60) {
-        this.$root.$emit("refreshData");
-        this.refreshCounter = 0;
-      }
-    }, 1000);
-    this.$root.$on("resetRefreshConter", () => {
-      this.refreshCounter = 0;
-    });
-
-    //Router settings
-    this.$router.push("home");
-    this.$root.$on("showError", error => this.addError(error));
-  },
-  data: () => ({
-    errors: [],
-    drawer: null,
-    refreshCounter: 0
-  }),
-  computed: {
-    ...mapGetters("Settings", ["laradockPath"])
-  },
-  methods: {
-    ...mapActions("Settings", ["setLaradockPath"]),
-    openBrowser(url) {
-      window.wails.Browser = { OpenURL: url };
+  export default {
+    name: "app",
+    //components: { AppMenu },
+    mixins: [dockerCompose],
+    created() {
+      this.$vuetify.theme.dark = true
     },
-    addError(error) {
-      this.errors.push({
-        text: error.substring(0, 255),
-        state: true
-      });
-      this.cleanErrors();
-    },
-    hideError(index) {
-      this.errors[index].state = false;
-      setTimeout(() => {
-        this.cleanErrors();
-      }, 1500);
-    },
-    cleanErrors() {
-      this.errors.forEach((v, i) => {
-        if (!v.state) {
-          this.errors.splice(i, 1);
+    mounted() {
+      //Data refresh
+      setInterval(() => {
+        this.refreshCounter++
+        if (this.refreshCounter === 60) {
+          this.$root.$emit("refreshData")
+          this.refreshCounter = 0
         }
-      });
+      }, 1000)
+      this.$root.$on("resetRefreshConter", () => {
+        this.refreshCounter = 0
+      })
+
+      //Router settings
+      this.$router.push("home")
+      this.$root.$on("showError", error => this.addError(error))
+    },
+    data: () => ({
+      errors: [],
+      drawer: null,
+      refreshCounter: 0,
+      isDark: true
+    }),
+    computed: {
+      ...mapGetters("Settings", ["laradockPath"])
+    },
+    methods: {
+      ...mapActions("Settings", ["setLaradockPath"]),
+      openBrowser(url) {
+        window.wails.Browser = {OpenURL: url}
+      },
+      addError(error) {
+        this.errors.push({
+          text: error.substring(0, 255),
+          state: true
+        })
+        this.cleanErrors()
+      },
+      hideError(index) {
+        this.errors[index].state = false
+        setTimeout(() => {
+          this.cleanErrors()
+        }, 1500)
+      },
+      cleanErrors() {
+        this.errors.forEach((v, i) => {
+          if (!v.state) {
+            this.errors.splice(i, 1)
+          }
+        })
+      },
     }
   }
-};
 </script>
 
 <style>
-.logo {
-  width: 16em;
-}
+  .logo {
+    width: 16em;
+  }
 
-a {
-  text-decoration: none;
-}
+  a {
+    text-decoration: none;
+  }
+</style>
+
+
+<style lang="scss" scoped>
+  .fade-enter-active,
+  .fade-leave-active {
+    transition-duration: 0.3s;
+    transition-property: height, opacity;
+    transition-timing-function: ease;
+    overflow: hidden;
+  }
+
+  .fade-enter,
+  .fade-leave-active {
+    opacity: 0
+  }
+
+  .slide-left-enter-active,
+  .slide-left-leave-active,
+  .slide-right-enter-active,
+  .slide-right-leave-active {
+    transition-duration: 0.2s;
+    transition-property: height, opacity, transform;
+    transition-timing-function: cubic-bezier(0.55, 0, 0.1, 1);
+    overflow: hidden;
+  }
+
+  @keyframes zoom {
+    from {
+      opacity: 0;
+      transform: scale3d(0.3, 0.3, 0.3);
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
 </style>

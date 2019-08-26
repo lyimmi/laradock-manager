@@ -1,4 +1,5 @@
-import { mapActions, mapGetters } from "vuex";
+import {mapActions, mapGetters} from "vuex"
+import _ from "lodash"
 
 export default {
   data() {
@@ -10,28 +11,59 @@ export default {
       dockerComposeVersion: "",
       snackbar: false,
       snackbarText: "",
-      containers: [],
       containersLoading: true,
+      containers: [],
       availableContainers: [],
+      envFilter: "",
       loadingContainer: "",
       dotEnvContents: {},
-      dotEnvContentGroups: {}
-    };
+      dotEnvContentGroups: {},
+      dotEnvContentGroupsFiltered: {}
+    }
   },
   computed: {
     ...mapGetters("Status", ["appStatus"]),
-    ...mapGetters("Settings", ["laradockPath"])
+    ...mapGetters("Settings", ["laradockPath"]),
   },
   mounted() {
     this.$root.$on("containersLoading", () => {
-      this.containersLoading = true;
-    });
+      this.containersLoading = true
+    })
     this.$root.$on("containersNotLoading", () => {
-      this.containersLoading = false;
-    });
+      this.containersLoading = false
+    })
+  },
+  watch: {
+    envFilter() {
+      this.filterEnvGroup()
+    }
   },
   methods: {
     ...mapActions("Status", ["setAppStatus"]),
+
+    filterEnvGroup: _.debounce(function () {
+      if (this.envFilter === null || this.envFilter === "") {
+        this.dotEnvContentGroupsFiltered = this.dotEnvContentGroups
+        return
+      }
+      let result = {}, conditions = this.envFilter.split(" ")
+      for (let key in this.dotEnvContentGroups) {
+        if (this.dotEnvContentGroups.hasOwnProperty(key)) {
+          for (let k in this.dotEnvContentGroups[key]) {
+            if (
+              this.dotEnvContentGroups[key].hasOwnProperty(k) &&
+              conditions.every(el => this.dotEnvContentGroups[key][k].field.includes(el.toUpperCase()))
+            ) {
+              if (typeof result[key] === "undefined") {
+                result[key] = []
+              }
+              result[key].push(this.dotEnvContentGroups[key][k])
+            }
+          }
+        }
+      }
+      this.dotEnvContentGroupsFiltered = result
+    }, 350),
 
     /**
      * Wait for wails to load settings to store
@@ -39,23 +71,23 @@ export default {
      * @param {*} callback
      * @param {*} i
      */
-    waitForSettings(callback, i) {
-      i = typeof i === "undefined" ? 0 : i;
+    waitForSettings(callback, i = 0) {
+      i = typeof i === "undefined" ? 0 : i
       if (i > 3) {
         this.$root.$emit(
           "showError",
           "Laradock's path is not set. Please set it on the settings page."
-        );
-        return false;
+        )
+        return false
       } else if (
         typeof this.laradockPath === "undefined" ||
         this.laradockPath === ""
       ) {
         setTimeout(() => {
-          this.waitForSettings(callback, i + 1);
-        }, 350);
+          this.waitForSettings(callback, i + 1)
+        }, 350)
       } else if (typeof callback === "function") {
-        callback();
+        callback()
       }
     },
 
@@ -65,7 +97,7 @@ export default {
      * @param {*} laradockPath
      */
     applyLaradockPath(laradockPath) {
-      window.backend.Compose.SetLaradockPath(laradockPath);
+      window.backend.Compose.SetLaradockPath(laradockPath)
     },
 
     /**
@@ -74,36 +106,36 @@ export default {
      * @param {*} callback
      */
     getAvailableContainers(callback) {
-      let self = this;
+      let self = this
       this.waitForSettings(() => {
         self.getContainers(() => {
           window.backend.Compose.GetAvailables().then(result => {
             // Parse response into an object for the table
-            let data = JSON.parse(result);
-            let containers = [];
+            let data = JSON.parse(result)
+            let containers = []
             data.forEach(c => {
               if (c !== "") {
                 let co = self.containers.find(co => {
-                  return co.code === c;
-                });
+                  return co.code === c
+                })
                 containers.push({
                   name: c,
                   state: typeof co === "undefined" ? "DOWN" : co.state
-                });
+                })
               }
-            });
+            })
             // Sort by built containers
             containers.sort((a, b) => {
-              return ("" + b.state).localeCompare(a.state);
-            });
-            self.availableContainers = containers;
-            self.$root.$emit("resetRefreshConter");
+              return ("" + b.state).localeCompare(a.state)
+            })
+            self.availableContainers = containers
+            self.$root.$emit("resetRefreshConter")
             if (typeof callback === "function") {
-              callback();
+              callback()
             }
-          });
-        });
-      });
+          })
+        })
+      })
     },
 
     /**
@@ -111,16 +143,16 @@ export default {
      */
     getContainers(callback) {
       this.waitForSettings(() => {
-        let self = this;
-        self.$root.$emit("containersLoading");
+        let self = this
+        self.$root.$emit("containersLoading")
         window.backend.Compose.Get().then(result => {
           if (result.startsWith("Error:")) {
-            self.$root.$emit("containersNotLoading");
-            this.$root.$emit("showError", result);
-            return;
+            self.$root.$emit("containersNotLoading")
+            this.$root.$emit("showError", result)
+            return
           }
-          result = JSON.parse(result);
-          let containers = [];
+          result = JSON.parse(result)
+          let containers = []
           result.forEach((line, k) => {
             if (k > 1 && line[0] !== "") {
               containers.push({
@@ -129,18 +161,18 @@ export default {
                 command: line[1],
                 state: line[2],
                 ports: line[3]
-              });
+              })
             }
-          });
-          self.containers = containers;
-          self.$root.$emit("containersNotLoading");
-          self.$root.$emit("resetRefreshConter");
+          })
+          self.containers = containers
+          self.$root.$emit("containersNotLoading")
+          self.$root.$emit("resetRefreshConter")
           if (typeof callback === "function") {
-            self.$root.$emit("containersLoading");
-            callback();
+            self.$root.$emit("containersLoading")
+            callback()
           }
-        });
-      });
+        })
+      })
     },
 
     /**
@@ -148,12 +180,12 @@ export default {
      */
     checkDotEnv() {
       this.waitForSettings(() => {
-        let self = this;
+        let self = this
         window.backend.Compose.CheckDotEnv().then(result => {
-          self.dotEnv = result;
-          self.setAppStatus({ dotEnv: result });
-        });
-      });
+          self.dotEnv = result
+          self.setAppStatus({dotEnv: result})
+        })
+      })
     },
 
     /**
@@ -161,15 +193,15 @@ export default {
      */
     checkDockerVersion() {
       this.waitForSettings(() => {
-        let self = this;
+        let self = this
         window.backend.Compose.CheckDockerVersion().then(result => {
-          let sPartial = "Docker version ";
+          let sPartial = "Docker version "
           let v = result.startsWith(sPartial)
             ? result.replace(sPartial, "")
-            : "";
-          self.dockerVersion = v;
-        });
-      });
+            : ""
+          self.dockerVersion = v
+        })
+      })
     },
 
     /**
@@ -177,15 +209,15 @@ export default {
      */
     checkDockerComposeVersion() {
       this.waitForSettings(() => {
-        let self = this;
+        let self = this
         window.backend.Compose.CheckDockerComposeVersion().then(result => {
-          let sPartial = "docker-compose version ";
+          let sPartial = "docker-compose version "
           let v = result.startsWith(sPartial)
             ? result.replace(sPartial, "")
-            : "";
-          self.dockerComposeVersion = v;
-        });
-      });
+            : ""
+          self.dockerComposeVersion = v
+        })
+      })
     },
 
     /**
@@ -194,44 +226,52 @@ export default {
      * @param {*} callback
      */
     getDotEnv(callback) {
+      this.$root.$emit("containersLoading")
       this.waitForSettings(() => {
-        let self = this;
+        let self = this
         window.backend.Compose.DotEnvContent().then(result => {
-          let groups = {};
+          let groups = {}
           Object.keys(result).forEach(k => {
-            let group = k.split("_", 1)[0];
+            let group = k.split("_", 1)[0]
             if (typeof groups[group] === "undefined") {
-              groups[group] = [];
+              groups[group] = []
             }
             groups[group].push({
               field: k,
               value: result[k],
               fieldName: k.split(group + "_").pop()
-            });
-          });
-          self.dotEnvContents = result;
-          self.dotEnvContentGroups = groups;
+            })
+          })
+          self.dotEnvContents = result
+          self.dotEnvContentGroups = groups
+          self.dotEnvContentGroupsFiltered = groups
+          this.$root.$emit("containersNotLoading")
           if (typeof callback !== "undefined") {
-            callback();
+            callback()
           }
-        });
-      });
+        })
+      })
     },
 
     /**
      * Write .env file's content
      *
      * @param {*} data
+     * @param callback
      */
-    writeDotEnv(data) {
+    writeDotEnv(data, callback) {
       this.waitForSettings(() => {
         // let self = this;
-        let sData = "";
+        let sData = ""
         Object.keys(data).forEach(e => {
-          sData += e + "=" + data[e] + "\n";
-        });
-        window.backend.Compose.SaveDotEnvContent(sData).then(() => {});
-      });
+          sData += e + "=" + data[e] + "\n"
+        })
+        window.backend.Compose.SaveDotEnvContent(sData).then(() => {
+          if (typeof callback === "function") {
+            callback()
+          }
+        })
+      })
     },
 
     /**
@@ -239,15 +279,15 @@ export default {
      */
     copyFromExample() {
       this.waitForSettings(() => {
-        let self = this;
+        let self = this
         window.backend.Compose.CopyEnv().then(result => {
           if (result) {
-            self.dotEnv = true;
+            self.dotEnv = true
           } else {
-            self.$root.$emit("showError", "Copy failed");
+            self.$root.$emit("showError", "Copy failed")
           }
-        });
-      });
+        })
+      })
     },
 
     /**
@@ -257,15 +297,15 @@ export default {
      * @param {*} container
      */
     toggleContainer(state, container) {
-      this.loadingContainer = container;
+      this.loadingContainer = container
       this.waitForSettings(() => {
-        let self = this;
-        self.$root.$emit("containersLoading");
+        let self = this
+        self.$root.$emit("containersLoading")
         window.backend.Compose.Toggle(state, container).then(() => {
-          self.$root.$emit("refreshData");
-          self.loadingContainer = "";
-        });
-      });
+          self.$root.$emit("refreshData")
+          self.loadingContainer = ""
+        })
+      })
     },
 
     /**
@@ -275,19 +315,19 @@ export default {
      */
     upContainer(container) {
       this.waitForSettings(() => {
-        this.$root.$emit("containersLoading");
+        this.$root.$emit("containersLoading")
         window.backend.Compose.Up(container).then(res => {
           if (res) {
-            self.$root.$emit("refreshData");
+            self.$root.$emit("refreshData")
           } else {
             self.$root.$emit(
               "showError",
               "Container cannot be uppped. Try building it first!"
-            );
+            )
           }
-          self.loadingContainer = "";
-        });
-      });
+          self.loadingContainer = ""
+        })
+      })
     },
 
     /**
@@ -295,37 +335,37 @@ export default {
      */
     downContainers() {
       this.waitForSettings(() => {
-        this.$root.$emit("containersLoading");
+        this.$root.$emit("containersLoading")
         window.backend.Compose.Down().then(res => {
           if (res) {
-            self.$root.$emit("refreshData");
+            self.$root.$emit("refreshData")
           } else {
-            self.$root.$emit("showError", "Container cannot be downed.");
+            self.$root.$emit("showError", "Container cannot be downed.")
           }
-        });
-      });
+        })
+      })
     },
 
     /**
      * Build a container
      */
     buildContainer(container, force) {
-      force = typeof force === "undefined" ? false : true;
-      let self = this;
+      force = typeof force === "undefined" ? false : true
+      let self = this
       this.waitForSettings(() => {
-        this.$root.$emit("containersLoading");
+        this.$root.$emit("containersLoading")
         window.backend.Compose.Build(container, force).then(res => {
           if (res) {
-            self.$root.$emit("refreshData");
+            self.$root.$emit("refreshData")
           } else {
             self.$root.$emit(
               "showError",
               "Container cannot be uppped. Try building it first!"
-            );
+            )
           }
-          self.loadingContainer = "";
-        });
-      });
+          self.loadingContainer = ""
+        })
+      })
     },
 
     /**
@@ -338,9 +378,9 @@ export default {
     execContainer(container, user, callback) {
       window.backend.Compose.Exec(container, user).then(() => {
         if (typeof callback === "function") {
-          callback();
+          callback()
         }
-      });
+      })
     },
 
     /**
@@ -351,9 +391,9 @@ export default {
     stopExecContiner(callback) {
       window.backend.Compose.StopExec().then(res => {
         if (res === "disconnected" && typeof callback === "function") {
-          callback();
+          callback()
         }
-      });
+      })
     }
   }
-};
+}

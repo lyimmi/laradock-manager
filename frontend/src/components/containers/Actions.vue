@@ -6,7 +6,6 @@
       small
       v-if="item.state === 'Up'"
       class="ma-2"
-      dark
       v-on:click="$root.$emit('execContiner', item.name)"
     >
       <v-icon :size="14">fas fa-terminal</v-icon>
