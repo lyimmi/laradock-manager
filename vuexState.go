@@ -9,6 +9,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/user"
+	"path"
 )
 
 var sKey = "2V6dUxoPqZFC7pK6779R07S605icY6CS"
@@ -25,6 +27,15 @@ type VuexState struct{}
 func NewVuexState() *VuexState {
 	result := &VuexState{}
 	return result
+}
+
+//homeDir return user's home directory
+func homeDir() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return usr.HomeDir, nil
 }
 
 //encode Encodes vuex store's data
@@ -82,8 +93,12 @@ func (t *VuexState) Write(data string) bool {
 	if err != nil {
 		return false
 	}
-
-	f, err := os.Create("vuex-store.data")
+	homeDir, err := homeDir()
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	f, err := os.Create(path.Join(homeDir, "laradockManagerSettings.data"))
 	if err != nil {
 		fmt.Println(err)
 		return false
@@ -105,7 +120,13 @@ func (t *VuexState) Write(data string) bool {
 
 //Read Reads vuex store data from file
 func (t *VuexState) Read() string {
-	data, err := ioutil.ReadFile("vuex-store.data")
+
+	homeDir, err := homeDir()
+	if err != nil {
+		fmt.Println(err)
+		return "{}"
+	}
+	data, err := ioutil.ReadFile(path.Join(homeDir, "laradockManagerSettings.data"))
 	if err != nil {
 		fmt.Println(err)
 		return "{}"

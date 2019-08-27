@@ -23,33 +23,38 @@
               <v-tab-item :value="'tab-basic'">
                 <v-card flat>
                   <v-card-text>
-                    <v-layout>
-                      <v-flex sm6>
-                        <template>
-                          <v-text-field
-                              v-model="dockerComposeYmlPath"
-                              :value="laradockPath"
-                              label="Absolute path to laradock folder"
-                              :placeholder="laradockPath"
-                              :disabled="laradockPath !== '' && dockerComposeYmlPath === laradockPath"
-                              ref="laradockPathInput"
-                          >
-                            <template v-slot:append>
-                              <v-btn
-                                  depressed
-                                  tile
-                                  color="secondary"
-                                  class="ma-0"
-                                  @click="storeLaradockPath"
-                                  :disabled="dockerComposeYmlPath === ''"
-                              >
-                                <v-icon>done</v-icon>
-                              </v-btn>
-                            </template>
-                          </v-text-field>
-                        </template>
-                      </v-flex>
-                    </v-layout>
+                    <v-row>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                            v-model="dockerComposeYmlPath"
+                            :value="laradockPath"
+                            label="Absolute path to laradock folder"
+                            :placeholder="laradockPath"
+                            :disabled="laradockPath !== '' && dockerComposeYmlPath === laradockPath"
+                            ref="laradockPathInput"
+                        >
+                          <template v-slot:append>
+                            <v-btn
+                                depressed
+                                tile
+                                color="secondary"
+                                class="ma-0"
+                                @click="storeLaradockPath"
+                                :disabled="dockerComposeYmlPath === ''"
+                            >
+                              <v-icon>done</v-icon>
+                            </v-btn>
+                          </template>
+                        </v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <v-switch
+                            label="Dark theme"
+                            color="primary"
+                            v-model="darkThemeSwitch"
+                        ></v-switch>
+                      </v-col>
+                    </v-row>
                   </v-card-text>
                 </v-card>
               </v-tab-item>
@@ -98,49 +103,60 @@
 </template>
 
 <script>
-  import {mapActions, mapGetters} from "vuex"
-  import dockerCompose from "../../shared/dockerCompose"
+  import {mapActions, mapGetters} from 'vuex'
+  import dockerCompose from '../../shared/dockerCompose'
 
   export default {
-    name: "index",
+    name: 'index',
+    mixins: [dockerCompose],
     data() {
       return {
-        dockerComposeYmlPath: "",
+        dockerComposeYmlPath: '',
         tab: null,
-        form: {}
+        form: {},
+        darkThemeSwitch: true
       }
     },
-    created() {
+    mounted() {
       this.getDotEnv(() => {
         Object.keys(this.dotEnvContents).forEach(element => {
           this.form[element] = this.dotEnvContents[element]
         })
       })
     },
-    mounted() {
-    },
-    mixins: [dockerCompose],
     computed: {
-      ...mapGetters("Settings", ["laradockPath"])
+      ...mapGetters('Settings', [
+        'laradockPath',
+        'darkTheme'
+      ])
+    },
+    watch: {
+      darkThemeSwitch(val) {
+        console.log(val)
+        this.$vuetify.theme.dark = val
+        this.setDarkTheme(val)
+      }
     },
     methods: {
-      ...mapActions("Settings", ["setLaradockPath"]),
+      ...mapActions('Settings', [
+        'setLaradockPath',
+        'setDarkTheme'
+      ]),
       storeLaradockPath() {
         this.setLaradockPath(this.dockerComposeYmlPath)
         this.applyLaradockPath(this.dockerComposeYmlPath)
       },
       saveDotEnv() {
-        this.$root.$emit("containersLoading")
+        this.$root.$emit('containersLoading')
         this.$nextTick(() => {
           this.writeDotEnv(this.dotEnvContents, () => {
             setTimeout(() => {
-              this.$root.$emit("containersNotLoading")
+              this.$root.$emit('containersNotLoading')
             }, 500)
           })
         })
       }
-    },
-    watch: {}
+    }
   }
 </script>
 

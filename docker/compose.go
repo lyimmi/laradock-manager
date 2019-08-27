@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -262,7 +261,7 @@ func (t *Compose) StopExec() string {
 func (t *Compose) DotEnvContent() map[string]string {
 	env, err := godotenv.Read(filepath.Join(t.laradockPath, ".env"))
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		fmt.Println("Error loading .env file")
 	}
 	return env
 }

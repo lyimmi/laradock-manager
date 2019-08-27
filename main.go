@@ -27,9 +27,9 @@ func main() {
 	vuex := NewVuexState()
 	res := VuexStore{}
 	err := json.Unmarshal([]byte(vuex.Read()), &res)
-	if err != nil {
-		panic(err)
-	}
+	//if err != nil {
+	//	panic(err)
+	//}
 	laradockPath := res.Settings["laradockPath"]
 
 	dc := docker.NewDockerCompose(laradockPath)

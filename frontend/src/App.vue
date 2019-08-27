@@ -37,12 +37,6 @@
           <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
 
           <v-spacer></v-spacer>
-          <v-switch
-              inset
-              style="height: 22px;"
-              color="primary"
-              v-model="$vuetify.theme.dark"
-          ></v-switch>
 
           <v-btn icon @click="$root.$emit('refreshData')" prevent>
             <v-icon>refresh</v-icon>
@@ -87,10 +81,11 @@
     name: "app",
     //components: { AppMenu },
     mixins: [dockerCompose],
-    created() {
-      this.$vuetify.theme.dark = true
-    },
     mounted() {
+      this.$vuetify.theme.dark = true
+      this.waitForSettings(() => {
+        this.$vuetify.theme.dark = this.darkTheme
+      })
       //Data refresh
       setInterval(() => {
         this.refreshCounter++
@@ -110,11 +105,13 @@
     data: () => ({
       errors: [],
       drawer: null,
-      refreshCounter: 0,
-      isDark: true
+      refreshCounter: 0
     }),
     computed: {
-      ...mapGetters("Settings", ["laradockPath"])
+      ...mapGetters("Settings", [
+        "laradockPath",
+        'darkTheme'
+      ])
     },
     methods: {
       ...mapActions("Settings", ["setLaradockPath"]),
