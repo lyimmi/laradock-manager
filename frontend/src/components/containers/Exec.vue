@@ -22,7 +22,7 @@
                 <v-flex xs12>
                   <iframe
                     v-if="conainerExecDialog"
-                    src="http://0.0.0.0:5000/"
+                    src="http://127.0.0.1:5000/"
                     border="0"
                     height="100%"
                     width="100%"
@@ -42,7 +42,12 @@
         <v-card>
           <v-card-title>Executing container: {{executableContiner}}</v-card-title>
           <v-card-text>
-            <v-text-field v-model="selectedUser" label="User"></v-text-field>
+            <v-text-field
+                v-model="selectedUser"
+                label="User" @keyup.enter="conainerExecDialog = true; selectUserDialog = false"
+                placeholder="root"
+                autofocus
+            ></v-text-field>
           </v-card-text>
           <v-card-actions>
             <v-btn color="primary" text @click="selectUserDialog = false">Cancel</v-btn>
@@ -50,7 +55,7 @@
             <v-btn
               color="primary"
               text
-              @click="conainerExecDialog = true;  selectUserDialog = false"
+              @click="conainerExecDialog = true; selectUserDialog = false"
             >Ok</v-btn>
           </v-card-actions>
         </v-card>
@@ -68,12 +73,6 @@ export default {
       this.selectUserDialog = true;
       this.executableContiner = container;
     });
-    wails.events.on("containerExecOutputChange", execData => {
-      if (execData) {
-        let data = (this.containerContent += execData).t;
-        this.containerContent = data;
-      }
-    });
   },
   data() {
     return {
@@ -88,7 +87,6 @@ export default {
   watch: {
     conainerExecDialog(current) {
       if (current === false) {
-        console.log("container stopped");
         this.stopExecContiner(() => {
           this.executableContiner = "";
           this.containerContent = "";
@@ -96,8 +94,6 @@ export default {
           document.getElementById("inspire").setAttribute("style", "");
         });
       } else if (current === true && this.executableContiner !== "") {
-        console.log(this.executableContiner, this.selectedUser);
-        console.log("container started");
         document
           .getElementById("inspire")
           .setAttribute("style", "height:100px; overflow: hidden;");

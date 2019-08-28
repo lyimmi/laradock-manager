@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	webAssetsDir = "docker/www"
-	listenAddr   = "0.0.0.0:5000"
+	webAssetsDir = "assets/exec-www"
+	listenAddr   = "127.0.0.1:5000"
 )
 
 //Handler Handler struckt
@@ -31,21 +31,27 @@ var laradockPath string
 var chanel chan bool
 var isRunning = false
 
-func containerExec(u string, c string, l string, ch chan bool) {
+func containerExec(u string, c string, l string, ch chan bool) *http.Server {
 	user = u
 	container = c
 	laradockPath = l
 	chanel = ch
 
 	//Ugly as hell hack close your eyes....
-	if !isRunning {
-		fmt.Printf("Listening on http://%s\n", listenAddr)
-		handler := Handler{
-			fileServer: http.FileServer(http.Dir(webAssetsDir)),
-		}
-		isRunning = true
-		http.ListenAndServe(listenAddr, &handler)
+
+	srv := &http.Server{Addr: listenAddr}
+	fmt.Printf("Listening on http://%s\n", listenAddr)
+	handler := Handler{
+		fileServer: http.FileServer(http.Dir(webAssetsDir)),
 	}
+	srv.Handler = &handler
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			isRunning = false
+			log.Fatalf("ListenAndServe(): %s", err)
+		}
+	}()
+	return srv
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

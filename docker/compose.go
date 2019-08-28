@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -237,13 +238,16 @@ func (t *Compose) Exec(container string, user string) {
 	t.containerExec = true
 	fmt.Println("connecting composer exec")
 	stopExecChanel := make(chan bool)
-	go func() {
-		containerExec(user, container, t.laradockPath, stopExecChanel)
-	}()
+
+	srv := containerExec(user, container, t.laradockPath, stopExecChanel)
+
 	for {
 		if t.containerExec == false {
 			fmt.Println("disconnecting exec")
 			close(stopExecChanel)
+			if err := srv.Shutdown(context.TODO()); err != nil {
+				fmt.Println(err) // failure/timeout shutting down the server gracefully
+			}
 			return
 		}
 		time.Sleep(1 * time.Second)

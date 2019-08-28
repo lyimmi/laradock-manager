@@ -127,7 +127,7 @@ export default {
             data.forEach(c => {
               if (c !== '') {
                 let co = self.containers.find(co => {
-                  return co.code === c
+                  return co.name === c
                 })
                 containers.push({
                   name: c,
@@ -167,8 +167,8 @@ export default {
           result.forEach((line, k) => {
             if (k > 1 && line[0] !== '') {
               containers.push({
-                name: line[0],
-                code: line[0].replace('laradock_', '').replace('_1', ''),
+                code: line[0],
+                name: line[0].replace('laradock_', '').replace('_1', ''),
                 command: line[1],
                 state: line[2],
                 ports: line[3]
