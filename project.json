@@ -1,18 +1,18 @@
 {
- "name": "laradock-manager",
- "description": "Enter your project description",
- "author": {
-  "name": "Zámbó, Levente",
-  "email": "levente.zambo@gmail.com"
- },
- "version": "0.1.0",
- "binaryname": "laradock-manager",
- "frontend": {
-  "dir": "frontend",
-  "install": "npm install",
-  "build": "npm run build",
-  "bridge": "src",
-  "serve": "npm run serve"
- },
- "WailsVersion": ""
+    "name": "laradock-manager",
+    "description": "A simple desktop application for managing laradock containers",
+    "author": {
+        "name": "Zámbó, Levente",
+        "email": "levente.zambo@gmail.com"
+    },
+    "version": "0.1.0",
+    "binaryname": "laradock-manager",
+    "frontend": {
+        "dir": "frontend",
+        "install": "npm install",
+        "build": "npm run build",
+        "bridge": "src",
+        "serve": "npm run serve"
+    },
+    "WailsVersion": "v0.18.3"
 }
