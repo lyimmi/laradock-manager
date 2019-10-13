@@ -17,6 +17,7 @@ import (
 //Compose DockerCompose struct
 type Compose struct {
 	laradockPath        string
+	terminalPath        string
 	containerExec       bool
 	containerConnected  bool
 	availableContainers map[string]string
@@ -35,6 +36,12 @@ func NewDockerCompose(path string) *Compose {
 //SetLaradockPath Check if .env file exists
 func (t *Compose) SetLaradockPath(path string) bool {
 	t.laradockPath = path
+	return true
+}
+
+//SetTerminalPath Check if .env file exists
+func (t *Compose) SetTerminalPath(path string) bool {
+	t.terminalPath = path
 	return true
 }
 

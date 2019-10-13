@@ -19,10 +19,14 @@ func (s *MyRuntime) WailsInit(r *wails.Runtime) error {
 	return nil
 }
 
-// SelectDirectory open a file selector dialog
+// SelectDirectory open a directory selector dialog
 func (s *MyRuntime) SelectDirectory() string {
-	file := s.runtime.Dialog.SelectDirectory()
-	return file
+	return s.runtime.Dialog.SelectDirectory()
+}
+
+// SelectFile open a file selector dialog
+func (s *MyRuntime) SelectFile() string {
+	return s.runtime.Dialog.SelectFile()
 }
 
 // main
@@ -32,7 +36,7 @@ func main() {
 	css := mewn.String("./frontend/dist/app.css")
 
 	app := wails.CreateApp(&wails.AppConfig{
-		Width:     1024,
+		Width:     1280,
 		Height:    800,
 		Title:     "Laradock manager",
 		JS:        js,

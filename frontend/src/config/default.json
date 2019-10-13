@@ -1,0 +1,6 @@
+{
+  "docker": {
+    "composeMinVersion": 18,
+    "dockerMinVersion": 1.20
+  }
+}

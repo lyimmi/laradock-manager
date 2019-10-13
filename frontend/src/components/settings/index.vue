@@ -26,7 +26,7 @@
                       <v-col cols="12" sm="6">
                         <v-text-field
                           v-model="dockerComposeYmlPath"
-                          @click="SelectDirectory"
+                          @click="selectLaradockDirectory"
                           :value="laradockPath"
                           label="Absolute path to laradock folder"
                           :placeholder="laradockPath"
@@ -41,6 +41,30 @@
                               class="ma-0"
                               @click="storeLaradockPath"
                               :disabled="dockerComposeYmlPath === ''"
+                            >
+                              <v-icon>done</v-icon>
+                            </v-btn>
+                          </template>
+                        </v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" v-if="false">
+                        <v-text-field
+                          v-model="terminalPathTmp"
+                          @click="selectTerminalExecutable"
+                          :value="terminalPath"
+                          label="Absolute path to terminal executable"
+                          :placeholder="terminalPath"
+                          :disabled="terminalPathTmp !== '' && terminalPathTmp === terminalPath"
+                          ref="terminalPathInput"
+                        >
+                          <template v-slot:append>
+                            <v-btn
+                              depressed
+                              tile
+                              color="secondary"
+                              class="ma-0"
+                              @click="storeTerminalPath"
+                              :disabled="terminalPathTmp === ''"
                             >
                               <v-icon>done</v-icon>
                             </v-btn>
@@ -104,7 +128,6 @@
 <script>
 import { mapActions, mapGetters } from "vuex";
 import dockerCompose from "../../shared/dockerCompose";
-import runtime from "@wailsapp/runtime";
 
 export default {
   name: "index",
@@ -112,6 +135,7 @@ export default {
   data() {
     return {
       dockerComposeYmlPath: "",
+      terminalPathTmp: "",
       tab: null,
       form: {},
       darkThemeSwitch: true
@@ -125,31 +149,49 @@ export default {
     });
   },
   computed: {
-    ...mapGetters("Settings", ["laradockPath", "darkTheme"])
+    ...mapGetters("Settings", ["laradockPath", "terminalPath", "darkTheme"])
   },
   watch: {
     darkThemeSwitch(val) {
-      console.log(val);
       this.$vuetify.theme.dark = val;
       this.setDarkTheme(val);
     }
   },
   methods: {
-    ...mapActions("Settings", ["setLaradockPath", "setDarkTheme"]),
+    ...mapActions("Settings", [
+      "setLaradockPath",
+      "setTerminalPath",
+      "setDarkTheme"
+    ]),
     /**
      * Select a directory return it's path
      */
-    SelectDirectory() {
+    selectTerminalExecutable() {
+      window.backend.MyRuntime.SelectFile().then(res => {
+        this.terminalPathTmp = res;
+      });
+    },
+
+    selectLaradockDirectory() {
       window.backend.MyRuntime.SelectDirectory().then(res => {
         this.dockerComposeYmlPath = res;
       });
     },
+
     /**
-     * Set laradock path
+     * Store laradock path
      */
     storeLaradockPath() {
       this.setLaradockPath(this.dockerComposeYmlPath);
       this.applyLaradockPath(this.dockerComposeYmlPath);
+    },
+    
+    /**
+     * Store terminal path
+     */
+    storeTerminalPath() {
+      this.setTerminalPath(this.terminalPathTmp);
+      this.applyTerminalPath(this.terminalPathTmp);
     },
     /**
      * Save dot env

@@ -1,33 +1,29 @@
-import 'babel-polyfill';
+import "babel-polyfill";
+import * as Wails from "@wailsapp/runtime";
 import Vue from "vue";
-
-import VueRouter from 'vue-router'
-import routes from './routes';
+import store from "./store";
+import vuetify from "@/plugins/vuetify"; // path to vuetify export
+import VueRouter from "vue-router";
+import routes from "./routes";
+import App from "./App.vue";
+import config from "./config/default.json";
 
 Vue.use(VueRouter);
 const router = new VueRouter({
-    mode: 'history',
-    routes
+  mode: "history",
+  routes
 });
-router.replace({ path: '*', redirect: '/' });
-
-import store from './store'
-
-
-// Setup Vuetify
-import vuetify from '@/plugins/vuetify' // path to vuetify export
-import App from "./App.vue";
+router.replace({ path: "*", redirect: "/" });
 
 Vue.config.productionTip = false;
 Vue.config.devtools = true;
-
-import * as Wails from '@wailsapp/runtime';
+Vue.prototype.$config = config;
 
 Wails.Init(() => {
-    new Vue({
-        store,
-        vuetify,
-        router,
-        render: h => h(App)
-    }).$mount("#app");
+  new Vue({
+    store,
+    vuetify,
+    router,
+    render: h => h(App)
+  }).$mount("#app");
 });

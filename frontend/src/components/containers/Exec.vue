@@ -51,7 +51,6 @@ export default {
   methods: {
     conainerExec() {
       this.selectUserDialog = false;
-      console.log(this.selectedUser);
       this.execContainer(this.executableContiner, this.selectedUser);
     }
   }

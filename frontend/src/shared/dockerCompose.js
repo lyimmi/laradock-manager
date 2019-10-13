@@ -118,6 +118,18 @@ export default {
     },
 
     /**
+     * Apply terminal path to backend
+     *
+     * @param {*} terminalPath
+     */
+    applyTerminalPath(terminalPath) {
+      let self = this;
+      window.backend.Compose.SetTerminalPath(terminalPath).then(() => {
+        self.$root.settingsHasError = false;
+      });
+    },
+
+    /**
      * Get all available containers
      *
      * @param {*} callback
@@ -217,7 +229,8 @@ export default {
             ? result.replace(sPartial, "")
             : "";
           self.dockerVersion = v;
-          if (!self.dockerVersion.startsWith("18")) {
+          let versionNumber = Number(self.dockerVersion.substring(0, 2));
+          if (versionNumber < this.$config.docker.composeMinVersion) {
             self.$root.$emit(
               "showError",
               "Docker executable is too old please update it!"
@@ -239,8 +252,8 @@ export default {
             ? result.replace(sPartial, "")
             : "";
           self.dockerComposeVersion = v;
-
-          if (!self.dockerComposeVersion.startsWith("1.2")) {
+          let versionNumber = Number(self.dockerVersion.substring(0, 3));
+          if (versionNumber < this.$config.docker.dockerMinVersion) {
             self.$root.$emit(
               "showError",
               "Docker Compose executable is too old please update it!"
