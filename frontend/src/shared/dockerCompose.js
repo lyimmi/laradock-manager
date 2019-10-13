@@ -13,7 +13,6 @@ export default {
       snackbarText: "",
       containersLoading: true,
       containers: [],
-      availableContainers: [],
       envFilter: "",
       loadingContainer: "",
       dotEnvContents: {},
@@ -23,6 +22,7 @@ export default {
     };
   },
   computed: {
+    ...mapGetters("Containers", ["favoritContainers", "availableContainers"]),
     ...mapGetters("Status", ["appStatus"]),
     ...mapGetters("Settings", ["laradockPath"])
   },
@@ -41,6 +41,7 @@ export default {
   },
   methods: {
     ...mapActions("Status", ["setAppStatus"]),
+    ...mapActions("Containers", ["setAvailableContainers", "updateAvailableContainers"]),
 
     filterEnvGroup: _.debounce(function() {
       if (this.envFilter === null || this.envFilter === "") {
@@ -147,7 +148,12 @@ export default {
                 let co = self.containers.find(co => {
                   return co.name === c;
                 });
+                let isFavorite = false;
+                if (this.favoritContainers.findIndex(x => x === c) !== -1) {
+                  isFavorite = true;
+                }
                 containers.push({
+                  favorite: isFavorite,
                   name: c,
                   state: typeof co === "undefined" ? "DOWN" : co.state
                 });
@@ -155,9 +161,12 @@ export default {
             });
             // Sort by built containers
             containers.sort((a, b) => {
+              if (a.favorite !== b.favorite) {
+                return  a.favorite ? -1 : 1;
+              }
               return ("" + b.state).localeCompare(a.state);
             });
-            self.availableContainers = containers;
+            self.setAvailableContainers(containers);
             self.$root.$emit("resetRefreshConter");
             if (typeof callback === "function") {
               callback();
@@ -195,7 +204,6 @@ export default {
           });
           self.containers = containers;
           self.$root.$emit("containersNotLoading");
-          self.$root.$emit("resetRefreshConter");
           if (typeof callback === "function") {
             self.$root.$emit("containersLoading");
             callback();

@@ -1,9 +1,8 @@
 <template>
   <v-container fluid grid-list-md>
-    <exec></exec>
     <v-layout>
       <v-flex xs8>
-        <containers></containers>
+        <containers-list></containers-list>
       </v-flex>
       <v-flex xs4>
         <statuses></statuses>
@@ -13,20 +12,17 @@
 </template>
 
 <script>
-  import Statuses from './Statuses'
-  import Containers from './Containers'
-  import Exec from "../containers/Exec";
+import Statuses from "./Statuses";
+import ContainersList from "../containers/ConatinersList";
 
-  export default {
-    name: "index",
-    components: {Exec, Containers, Statuses},
-    data() {
-      return {
-      }
-    },
+export default {
+  name: "index",
+  components: { ContainersList, Statuses },
+  data() {
+    return {};
   }
+};
 </script>
 
 <style scoped>
-
 </style>
