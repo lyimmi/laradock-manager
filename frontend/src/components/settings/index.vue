@@ -72,7 +72,7 @@
                         </v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6">
-                        <v-switch label="Dark theme" color="primary" v-model="darkThemeSwitch"></v-switch>
+                        <v-switch label="Dark theme" color="primary" v-model="darkTheme"></v-switch>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -138,7 +138,6 @@ export default {
       terminalPathTmp: "",
       tab: null,
       form: {},
-      darkThemeSwitch: true
     };
   },
   mounted() {
@@ -149,20 +148,24 @@ export default {
     });
   },
   computed: {
-    ...mapGetters("Settings", ["laradockPath", "terminalPath", "darkTheme"])
+    ...mapGetters("Settings", ["laradockPath", "terminalPath"]),
+    darkTheme: {
+      set(value) {
+        this.$store.dispatch("Settings/setDarkTheme", value)
+      },
+      get() {
+        return this.$store.getters["Settings/darkTheme"]
+      }
+    }
   },
   watch: {
-    darkThemeSwitch(val) {
+    darkTheme(val) {
+      console.log(val);
       this.$vuetify.theme.dark = val;
-      this.setDarkTheme(val);
     }
   },
   methods: {
-    ...mapActions("Settings", [
-      "setLaradockPath",
-      "setTerminalPath",
-      "setDarkTheme"
-    ]),
+    ...mapActions("Settings", ["setLaradockPath", "setTerminalPath"]),
     /**
      * Select a directory return it's path
      */
@@ -185,7 +188,7 @@ export default {
       this.setLaradockPath(this.dockerComposeYmlPath);
       this.applyLaradockPath(this.dockerComposeYmlPath);
     },
-    
+
     /**
      * Store terminal path
      */
