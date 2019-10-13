@@ -238,7 +238,7 @@ export default {
             : "";
           self.dockerVersion = v;
           let versionNumber = Number(self.dockerVersion.substring(0, 2));
-          if (versionNumber < this.$config.docker.composeMinVersion) {
+          if (versionNumber < this.$config.docker.dockerMinVersion) {
             self.$root.$emit(
               "showError",
               "Docker executable is too old please update it!"
@@ -260,8 +260,8 @@ export default {
             ? result.replace(sPartial, "")
             : "";
           self.dockerComposeVersion = v;
-          let versionNumber = Number(self.dockerVersion.substring(0, 3));
-          if (versionNumber < this.$config.docker.dockerMinVersion) {
+          let versionNumber = Number(self.dockerComposeVersion.substring(0, 3));
+          if (versionNumber < this.$config.docker.composeMinVersion) {
             self.$root.$emit(
               "showError",
               "Docker Compose executable is too old please update it!"

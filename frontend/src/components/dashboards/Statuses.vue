@@ -24,7 +24,7 @@
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>
-              Docker Compsose
+              Docker Compose
               <br />
               <small>{{dockerComposeVersion}}</small>
             </v-list-item-title>
