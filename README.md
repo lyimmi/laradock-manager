@@ -1,7 +1,7 @@
 # laradock-manager	
 
 A simple application for managing laradock containers.	
-Developed and tested only on Ubuntu 19.04	
+Developed and tested only on Ubuntu 19.04/18.04	
 
 Made with https://wails.app/ (go & vue.js & vuetify)	
 
