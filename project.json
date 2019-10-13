@@ -1,8 +1,8 @@
 {
- "name": "Laradock manager",
- "description": "A simple desktop application for managing laradock containers",
+ "name": "laradock-manager",
+ "description": "Enter your project description",
  "author": {
-  "name": "Zambo, Levente",
+  "name": "Zámbó, Levente",
   "email": "levente.zambo@gmail.com"
  },
  "version": "0.1.0",

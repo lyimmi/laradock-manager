@@ -2,7 +2,6 @@ package docker
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"time"
+	"runtime"
 
 	"github.com/joho/godotenv"
 )
@@ -26,20 +25,6 @@ type Compose struct {
 // envStruct
 type envStruck struct {
 }
-
-// //WailsInit wails init
-// func (t *Compose) WailsInit(runtime *wails.Runtime) error {
-// 	go func() {
-// 		for {
-// 			if t.containerExec == true && t.containerConnected == true {
-// 				runtime.Events.Emit("containerExecOutputChange", "connected")
-// 				fmt.Println("event emitted")
-// 			} else if t.containerExec == false && t.containerConnected == true {
-// 			time.Sleep(1 * time.Second)
-// 		}
-// 	}()
-// 	return nil
-// }
 
 //NewDockerCompose Create a new DockerCompose struct
 func NewDockerCompose(path string) *Compose {
@@ -234,31 +219,18 @@ func (t *Compose) Build(container string, force bool) bool {
 }
 
 //Exec Execute a docker container
-func (t *Compose) Exec(container string, user string) {
-	t.containerExec = true
-	fmt.Println("connecting composer exec")
-	stopExecChanel := make(chan bool)
-
-	srv := containerExec(user, container, t.laradockPath, stopExecChanel)
-
-	for {
-		if t.containerExec == false {
-			fmt.Println("disconnecting exec")
-			close(stopExecChanel)
-			if err := srv.Shutdown(context.TODO()); err != nil {
-				fmt.Println(err) // failure/timeout shutting down the server gracefully
-			}
-			return
-		}
-		time.Sleep(1 * time.Second)
+//
+//start cmd /k echo Hello, World!
+func (t *Compose) Exec(container string, user string) string {
+	cmd := exec.Command("gnome-terminal", "--", "docker-compose", "exec", "--user="+user, container, "bash")
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("start", "cmd", "/k", "docker-compose", "exec", "--user="+user, container, "bash")
 	}
-}
-
-//StopExec Stop the exec's g routine
-func (t *Compose) StopExec() string {
-	t.containerExec = false
-	fmt.Println("disconnect signal reveived")
-	return "disconnected"
+	cmd.Dir = filepath.Join(t.laradockPath)
+	if err := cmd.Run(); err != nil {
+		return "Error: " + fmt.Sprint(err)
+	}
+	return "terminal started"
 }
 
 //DotEnvContent Return dot env contents

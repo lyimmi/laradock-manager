@@ -2,13 +2,30 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/lyimmi/laradock-manager/docker"
 
 	"github.com/leaanthony/mewn"
-
+	"github.com/lyimmi/laradock-manager/docker"
 	"github.com/wailsapp/wails"
 )
 
+// MyRuntime wails runtime
+type MyRuntime struct {
+	runtime *wails.Runtime
+}
+
+// WailsInit initialize wails
+func (s *MyRuntime) WailsInit(r *wails.Runtime) error {
+	s.runtime = r
+	return nil
+}
+
+// SelectDirectory open a file selector dialog
+func (s *MyRuntime) SelectDirectory() string {
+	file := s.runtime.Dialog.SelectDirectory()
+	return file
+}
+
+// main
 func main() {
 
 	js := mewn.String("./frontend/dist/app.js")
@@ -27,13 +44,10 @@ func main() {
 	vuex := NewVuexState()
 	res := VuexStore{}
 	err := json.Unmarshal([]byte(vuex.Read()), &res)
-	//if err != nil {
-	//	panic(err)
-	//}
-	laradockPath := res.Settings["laradockPath"]
+	dc := docker.NewDockerCompose(res.Settings["laradockPath"])
+	my := &MyRuntime{}
 
-	dc := docker.NewDockerCompose(laradockPath)
-
+	app.Bind(my)
 	app.Bind(dc)
 	app.Bind(vuex)
 

@@ -3,18 +3,17 @@
     <v-layout align-center justify-center wrap>
       <v-flex xs12>
         <v-card :loading="containersLoading">
-
           <v-tabs v-model="tab" vertical>
             <v-tab href="#tab-basic" class="ma-0">Basics</v-tab>
             <v-tab href="#tab-env">Env</v-tab>
             <v-fab-transition>
               <v-btn
-                  fab
-                  small
-                  color="pink"
-                  @click="saveDotEnv"
-                  class="ml-6 mt-6"
-                  v-if="tab === 'tab-env'"
+                fab
+                small
+                color="pink"
+                @click="saveDotEnv"
+                class="ml-6 mt-6"
+                v-if="tab === 'tab-env'"
               >
                 <v-icon>fa-save</v-icon>
               </v-btn>
@@ -26,21 +25,22 @@
                     <v-row>
                       <v-col cols="12" sm="6">
                         <v-text-field
-                            v-model="dockerComposeYmlPath"
-                            :value="laradockPath"
-                            label="Absolute path to laradock folder"
-                            :placeholder="laradockPath"
-                            :disabled="laradockPath !== '' && dockerComposeYmlPath === laradockPath"
-                            ref="laradockPathInput"
+                          v-model="dockerComposeYmlPath"
+                          @click="SelectDirectory"
+                          :value="laradockPath"
+                          label="Absolute path to laradock folder"
+                          :placeholder="laradockPath"
+                          :disabled="laradockPath !== '' && dockerComposeYmlPath === laradockPath"
+                          ref="laradockPathInput"
                         >
                           <template v-slot:append>
                             <v-btn
-                                depressed
-                                tile
-                                color="secondary"
-                                class="ma-0"
-                                @click="storeLaradockPath"
-                                :disabled="dockerComposeYmlPath === ''"
+                              depressed
+                              tile
+                              color="secondary"
+                              class="ma-0"
+                              @click="storeLaradockPath"
+                              :disabled="dockerComposeYmlPath === ''"
                             >
                               <v-icon>done</v-icon>
                             </v-btn>
@@ -48,11 +48,7 @@
                         </v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6">
-                        <v-switch
-                            label="Dark theme"
-                            color="primary"
-                            v-model="darkThemeSwitch"
-                        ></v-switch>
+                        <v-switch label="Dark theme" color="primary" v-model="darkThemeSwitch"></v-switch>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -63,28 +59,31 @@
                 <v-row>
                   <v-col cols="12" xs="12">
                     <v-text-field
-                        class="mr-10"
-                        prepend-icon="search"
-                        label="Search in .env file"
-                        v-model="envFilter"
-                        hide-details
-                        clearable
+                      class="mr-10"
+                      prepend-icon="search"
+                      label="Search in .env file"
+                      v-model="envFilter"
+                      hide-details
+                      clearable
                     ></v-text-field>
                   </v-col>
                 </v-row>
                 <v-row>
                   <v-col cols="12" xs="12">
                     <v-expansion-panels>
-                      <v-expansion-panel v-for="(item, key) in dotEnvContentGroupsFiltered" :key="key">
+                      <v-expansion-panel
+                        v-for="(item, key) in dotEnvContentGroupsFiltered"
+                        :key="key"
+                      >
                         <v-expansion-panel-header>{{key}}</v-expansion-panel-header>
                         <v-expansion-panel-content>
                           <v-row>
                             <v-col cols="12" md="3" v-for="input in item" :key="input.field">
                               <v-text-field
-                                  placeholder=" "
-                                  :label="input.fieldName"
-                                  v-model="dotEnvContents[input.field]"
-                                  type="text"
+                                placeholder=" "
+                                :label="input.fieldName"
+                                v-model="dotEnvContents[input.field]"
+                                type="text"
                               ></v-text-field>
                             </v-col>
                           </v-row>
@@ -103,61 +102,70 @@
 </template>
 
 <script>
-  import {mapActions, mapGetters} from 'vuex'
-  import dockerCompose from '../../shared/dockerCompose'
+import { mapActions, mapGetters } from "vuex";
+import dockerCompose from "../../shared/dockerCompose";
+import runtime from "@wailsapp/runtime";
 
-  export default {
-    name: 'index',
-    mixins: [dockerCompose],
-    data() {
-      return {
-        dockerComposeYmlPath: '',
-        tab: null,
-        form: {},
-        darkThemeSwitch: true
-      }
+export default {
+  name: "index",
+  mixins: [dockerCompose],
+  data() {
+    return {
+      dockerComposeYmlPath: "",
+      tab: null,
+      form: {},
+      darkThemeSwitch: true
+    };
+  },
+  mounted() {
+    this.getDotEnv(() => {
+      Object.keys(this.dotEnvContents).forEach(element => {
+        this.form[element] = this.dotEnvContents[element];
+      });
+    });
+  },
+  computed: {
+    ...mapGetters("Settings", ["laradockPath", "darkTheme"])
+  },
+  watch: {
+    darkThemeSwitch(val) {
+      console.log(val);
+      this.$vuetify.theme.dark = val;
+      this.setDarkTheme(val);
+    }
+  },
+  methods: {
+    ...mapActions("Settings", ["setLaradockPath", "setDarkTheme"]),
+    /**
+     * Select a directory return it's path
+     */
+    SelectDirectory() {
+      window.backend.MyRuntime.SelectDirectory().then(res => {
+        this.dockerComposeYmlPath = res;
+      });
     },
-    mounted() {
-      this.getDotEnv(() => {
-        Object.keys(this.dotEnvContents).forEach(element => {
-          this.form[element] = this.dotEnvContents[element]
-        })
-      })
+    /**
+     * Set laradock path
+     */
+    storeLaradockPath() {
+      this.setLaradockPath(this.dockerComposeYmlPath);
+      this.applyLaradockPath(this.dockerComposeYmlPath);
     },
-    computed: {
-      ...mapGetters('Settings', [
-        'laradockPath',
-        'darkTheme'
-      ])
-    },
-    watch: {
-      darkThemeSwitch(val) {
-        console.log(val)
-        this.$vuetify.theme.dark = val
-        this.setDarkTheme(val)
-      }
-    },
-    methods: {
-      ...mapActions('Settings', [
-        'setLaradockPath',
-        'setDarkTheme'
-      ]),
-      storeLaradockPath() {
-        this.setLaradockPath(this.dockerComposeYmlPath)
-        this.applyLaradockPath(this.dockerComposeYmlPath)
-      },
-      saveDotEnv() {
-        this.$root.$emit('containersLoading')
-        this.$nextTick(() => {
-          this.writeDotEnv(this.dotEnvContents, () => {
-            setTimeout(() => {
-              this.$root.$emit('containersNotLoading')
-            }, 500)
-          })
-        })
-      }
+    /**
+     * Save dot env
+     */
+    saveDotEnv() {
+      this.$root.$emit("containersLoading");
+      this.$nextTick(() => {
+        this.writeDotEnv(this.dotEnvContents, () => {
+          setTimeout(() => {
+            this.$root.$emit("containersNotLoading");
+          }, 500);
+        });
+      });
     }
   }
+};
 </script>
 
 <style scoped>

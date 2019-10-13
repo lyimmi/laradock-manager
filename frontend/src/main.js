@@ -21,9 +21,9 @@ import App from "./App.vue";
 Vue.config.productionTip = false;
 Vue.config.devtools = true;
 
-import Bridge from "./wailsbridge";
+import * as Wails from '@wailsapp/runtime';
 
-Bridge.Start(() => {
+Wails.Init(() => {
     new Vue({
         store,
         vuetify,
