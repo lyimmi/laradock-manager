@@ -6,9 +6,14 @@
         <v-card class="mx-auto" :loading="containersLoading">
           <v-card-title>
             Containers &nbsp;
-            <v-btn icon small @click="downContainers()">
-              <v-icon>fas fa-arrow-down</v-icon>
-            </v-btn>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn icon small @click="downContainers()" v-on="on">
+                  <v-icon>fas fa-arrow-down</v-icon>
+                </v-btn>
+              </template>
+              <span>Down all containers: docker-compose down</span>
+            </v-tooltip>
             <v-spacer></v-spacer>
             <v-text-field
               v-model="search"

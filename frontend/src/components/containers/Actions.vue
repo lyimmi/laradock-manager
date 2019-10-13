@@ -1,39 +1,48 @@
 
 <template>
   <div>
-    <v-btn
-      icon
-      small
-      v-if="item.state === 'Up'"
-      class="ma-2"
-      v-on:click="$root.$emit('execContiner', item.name)"
-    >
-      <v-icon :size="14">fas fa-terminal</v-icon>
-    </v-btn>
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn
+          icon
+          small
+          v-if="item.state === 'Up'"
+          class="ma-2"
+          v-on:click="$root.$emit('execContiner', item.name)"
+          v-on="on"
+        >
+          <v-icon :size="14">fas fa-terminal</v-icon>
+        </v-btn>
+      </template>
+      <span>Open container in terminal</span>
+    </v-tooltip>
 
-    <v-btn
-      small
-      icon
-      :size="14"
-      v-if="item.state === 'Up'"
-      @click="toggleContainer('stop', item.name, true)"
-    >
-      <v-icon>stop</v-icon>
-    </v-btn>
+    <v-tooltip bottom v-if="item.state === 'Up'">
+      <template v-slot:activator="{ on }">
+        <v-btn small icon :size="14" @click="toggleContainer('stop', item.name, true)" v-on="on">
+          <v-icon>stop</v-icon>
+        </v-btn>
+      </template>
+      <span>Stop container</span>
+    </v-tooltip>
 
-    <v-btn
-      small
-      icon
-      :size="14"
-      v-else-if="item.state !== 'DOWN'"
-      @click="toggleContainer('start', item.name, true)"
-    >
-      <v-icon>play_arrow</v-icon>
-    </v-btn>
+    <v-tooltip bottom v-else-if="item.state !== 'DOWN'">
+      <template v-slot:activator="{ on }">
+        <v-btn small icon :size="14" @click="toggleContainer('start', item.name, true)" v-on="on">
+          <v-icon>play_arrow</v-icon>
+        </v-btn>
+      </template>
+      <span>Build the containers</span>
+    </v-tooltip>
 
-    <v-btn small icon :size="14" v-else-if="item.state === 'DOWN'" @click="upContainer(item.name)">
-      <v-icon>arrow_upward</v-icon>
-    </v-btn>
+    <v-tooltip bottom v-else-if="item.state === 'DOWN'">
+      <template v-slot:activator="{ on }">
+        <v-btn small icon :size="14" @click="upContainer(item.name)" v-on="on">
+          <v-icon>arrow_upward</v-icon>
+        </v-btn>
+      </template>
+      <span>Build the containers</span>
+    </v-tooltip>
 
     <v-menu offset-y>
       <template v-slot:activator="{ on }">
