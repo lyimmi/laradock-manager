@@ -159,8 +159,11 @@ func (t *Compose) GetAvailables() string {
 }
 
 //Toggle Toggle a container on and off
-func (t *Compose) Toggle(state string, container string) bool {
-	cmd := exec.Command("docker-compose", state, container)
+func (t *Compose) Toggle(state string, containers string) bool {
+	cSlice := strings.Split(containers, "|")       //split the provided containers into a slice
+	args := []string{state}                        //prepare args
+	args = append(args, cSlice...)                 //merge all arguments
+	cmd := exec.Command("docker-compose", args...) //build command
 	cmd.Dir = t.laradockPath
 	var out bytes.Buffer
 	var stderr bytes.Buffer

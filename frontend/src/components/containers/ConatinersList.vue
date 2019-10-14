@@ -2,19 +2,56 @@
   <v-card class="mx-auto" :loading="containersLoading">
     <v-card-title>
       Containers &nbsp;
-      <v-tooltip bottom>
+      <v-menu offset-y>
         <template v-slot:activator="{ on }">
-          <v-btn icon small @click="downContainers()" v-on="on">
-            <v-icon>fas fa-arrow-down</v-icon>
-          </v-btn>
+          <v-btn color="primary" dark v-on="on" small>Mass actions</v-btn>
         </template>
-        <span>Down all containers: docker-compose down</span>
-      </v-tooltip>
+        <v-list>
+          <v-list-item @click="massBuild">
+            <v-list-item-title>
+              <v-icon :size="20">build</v-icon>&nbsp;Build
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="massBuild(true)">
+            <v-list-item-title>
+              <v-icon :size="20">build</v-icon>&nbsp;Build without cache
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="massUp">
+            <v-list-item-title>
+              <v-icon>arrow_upward</v-icon>&nbsp;Up
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="massToggle('start')">
+            <v-list-item-title>
+              <v-icon>play_arrow</v-icon>&nbsp;Start
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="massToggle('stop')">
+            <v-list-item-title>
+              <v-icon>stop</v-icon>&nbsp;Stop
+            </v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="downContainers()">
+            <v-list-item-title>
+              <v-icon>arrow_downward</v-icon>&nbsp;Down all
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
       <v-spacer></v-spacer>
       <v-text-field v-model="search" append-icon="search" label="Search" single-line hide-details></v-text-field>
     </v-card-title>
     <v-card-text>
-      <v-data-table :headers="headers" :items="availableContainers" :search="search">
+      <v-data-table
+        :headers="headers"
+        :single-select="false"
+        item-key="name"
+        :items="availableContainers"
+        :search="search"
+        v-model="selectedContainers"
+        show-select
+      >
         <template v-slot:item.favorite="{ item }">
           <v-btn text icon :color="item.favorite ? 'yellow' : 'grey'" @click="toggleFavorite(item)">
             <v-icon>star</v-icon>
@@ -62,7 +99,8 @@ export default {
         },
         { text: "State", align: "center", sortable: true, value: "state" },
         { text: "Actions", align: "center", value: "action", sortable: false }
-      ]
+      ],
+      selectedContainers: []
     };
   },
   mounted() {
@@ -87,6 +125,23 @@ export default {
       "updateAvailableContainer",
       "removeFavoriteContiner"
     ]),
+    pluckCotnainers(containers) {
+      return Object.keys(containers)
+        .map(f => containers[f].name)
+        .join("|");
+    },
+    massBuild(cache = false) {
+      this.buildContainer(this.pluckCotnainers(this.selectedContainers), cache);
+    },
+    massToggle(state) {
+      this.toggleContainer(
+        state,
+        this.pluckCotnainers(this.selectedContainers)
+      );
+    },
+    massUp() {
+      this.upContainer(this.pluckCotnainers(this.selectedContainers));
+    },
     toggleFavorite(item) {
       let isFavorite = true;
       if (this.favoritContainers.findIndex(x => x === item.name) === -1) {

@@ -19,7 +19,7 @@
 
     <v-tooltip bottom v-if="item.state === 'Up'">
       <template v-slot:activator="{ on }">
-        <v-btn small icon :size="14" @click="toggleContainer('stop', item.name, true)" v-on="on">
+        <v-btn small icon :size="14" @click="toggleContainer('stop', item.name)" v-on="on">
           <v-icon>stop</v-icon>
         </v-btn>
       </template>
@@ -28,7 +28,7 @@
 
     <v-tooltip bottom v-else-if="item.state !== 'DOWN'">
       <template v-slot:activator="{ on }">
-        <v-btn small icon :size="14" @click="toggleContainer('start', item.name, true)" v-on="on">
+        <v-btn small icon :size="14" @click="toggleContainer('start', item.name)" v-on="on">
           <v-icon>play_arrow</v-icon>
         </v-btn>
       </template>
