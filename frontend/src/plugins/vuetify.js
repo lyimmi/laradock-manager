@@ -1,8 +1,4 @@
-// You still need to register Vuetify itself
-// src/plugins/vuetify.js
-import "material-design-icons-iconfont";
-import "@fortawesome/fontawesome-free/css/all.css"; // Ensure you are using css-loader
-
+import "@mdi/font/css/materialdesignicons.css"; // Ensure you are using css-loader
 import Vue from "vue";
 import Vuetify from "vuetify/lib";
 import LRU from "lru-cache";
@@ -16,7 +12,7 @@ const themeCache = new LRU({
 
 export default new Vuetify({
   icons: {
-    iconfont: "fa" // default - only for display purposes
+    iconfont: "mdi" // default - only for display purposes
   },
   theme: {
     options: {
@@ -28,14 +24,7 @@ export default new Vuetify({
       }
     },
     themes: {
-      dark: {
-        primary: "#00bcd4",
-        secondary: "#607d8b",
-        accent: "#205cae",
-        warning: "#009688",
-        info: "#2196f3",
-        success: "#4caf50"
-      }
+      dark: {}
     }
   }
 });

@@ -15,7 +15,7 @@
                 class="ml-6 mt-6"
                 v-if="tab === 'tab-env'"
               >
-                <v-icon>fa-save</v-icon>
+                <v-icon>mdi-content-save</v-icon>
               </v-btn>
             </v-fab-transition>
             <v-tabs-items v-model="tab">
@@ -42,7 +42,7 @@
                               @click="storeLaradockPath"
                               :disabled="dockerComposeYmlPath === ''"
                             >
-                              <v-icon>done</v-icon>
+                              <v-icon>mdi-check</v-icon>
                             </v-btn>
                           </template>
                         </v-text-field>
@@ -84,7 +84,7 @@
                   <v-col cols="12" xs="12">
                     <v-text-field
                       class="mr-10"
-                      prepend-icon="search"
+                      prepend-icon="mdi-database-search"
                       label="Search in .env file"
                       v-model="envFilter"
                       hide-details
@@ -137,7 +137,7 @@ export default {
       dockerComposeYmlPath: "",
       terminalPathTmp: "",
       tab: null,
-      form: {},
+      form: {}
     };
   },
   mounted() {
@@ -151,16 +151,15 @@ export default {
     ...mapGetters("Settings", ["laradockPath", "terminalPath"]),
     darkTheme: {
       set(value) {
-        this.$store.dispatch("Settings/setDarkTheme", value)
+        this.$store.dispatch("Settings/setDarkTheme", value);
       },
       get() {
-        return this.$store.getters["Settings/darkTheme"]
+        return this.$store.getters["Settings/darkTheme"];
       }
     }
   },
   watch: {
     darkTheme(val) {
-      console.log(val);
       this.$vuetify.theme.dark = val;
     }
   },

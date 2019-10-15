@@ -4,43 +4,56 @@
       Containers &nbsp;
       <v-menu offset-y>
         <template v-slot:activator="{ on }">
-          <v-btn color="primary" dark v-on="on" small>Mass actions</v-btn>
+          <v-btn color="default" x-small dark v-on="on">Mass actions</v-btn>
         </template>
-        <v-list>
+        <v-list dense>
           <v-list-item @click="massBuild">
-            <v-list-item-title>
-              <v-icon :size="20">build</v-icon>&nbsp;Build
-            </v-list-item-title>
+            <v-list-item-icon>
+              <v-icon>mdi-progress-wrench</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>Build</v-list-item-content>
           </v-list-item>
           <v-list-item @click="massBuild(true)">
-            <v-list-item-title>
-              <v-icon :size="20">build</v-icon>&nbsp;Build without cache
-            </v-list-item-title>
+            <v-list-item-icon>
+              <v-icon>mdi-progress-wrench</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>Build without cache</v-list-item-content>
           </v-list-item>
           <v-list-item @click="massUp">
-            <v-list-item-title>
-              <v-icon>arrow_upward</v-icon>&nbsp;Up
-            </v-list-item-title>
+            <v-list-item-icon>
+              <v-icon>mdi-arrow-up-bold</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>Up</v-list-item-content>
           </v-list-item>
           <v-list-item @click="massToggle('start')">
-            <v-list-item-title>
-              <v-icon>play_arrow</v-icon>&nbsp;Start
-            </v-list-item-title>
+            <v-list-item-icon>
+              <v-icon>mdi-play</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>Start</v-list-item-content>
           </v-list-item>
           <v-list-item @click="massToggle('stop')">
-            <v-list-item-title>
-              <v-icon>stop</v-icon>&nbsp;Stop
-            </v-list-item-title>
+            <v-list-item-icon>
+              <v-icon>mdi-stop</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>Stop</v-list-item-content>
           </v-list-item>
           <v-list-item @click="downContainers()">
-            <v-list-item-title>
-              <v-icon>arrow_downward</v-icon>&nbsp;Down all
-            </v-list-item-title>
+            <v-list-item-icon>
+              <v-icon>mdi-arrow-down-bold</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>Down all</v-list-item-content>
           </v-list-item>
         </v-list>
       </v-menu>
       <v-spacer></v-spacer>
-      <v-text-field v-model="search" append-icon="search" label="Search" single-line hide-details></v-text-field>
+      <v-text-field
+        class="mt-0 pt-0"
+        v-model="search"
+        append-icon="mdi-database-search"
+        label="Search"
+        single-line
+        hide-details
+      ></v-text-field>
     </v-card-title>
     <v-card-text>
       <v-data-table
@@ -54,7 +67,7 @@
       >
         <template v-slot:item.favorite="{ item }">
           <v-btn text icon :color="item.favorite ? 'yellow' : 'grey'" @click="toggleFavorite(item)">
-            <v-icon>star</v-icon>
+            <v-icon>mdi-star</v-icon>
           </v-btn>
         </template>
         <template v-slot:item.state="{ item }">
@@ -98,7 +111,7 @@ export default {
           value: "name"
         },
         { text: "State", align: "center", sortable: true, value: "state" },
-        { text: "Actions", align: "center", value: "action", sortable: false }
+        { text: "Actions", align: "left", value: "action", sortable: false }
       ],
       selectedContainers: []
     };

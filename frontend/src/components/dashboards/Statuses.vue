@@ -5,8 +5,8 @@
       <v-list disabled dense>
         <v-list-item dense>
           <v-list-item-icon small>
-            <v-icon color="error" v-if="dockerVersion === ''">error</v-icon>
-            <v-icon color="success" v-else>check</v-icon>
+            <v-icon color="error" v-if="dockerVersion === ''">mdi-alert-circle-outline</v-icon>
+            <v-icon color="success" v-else>mdi-check</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>
@@ -19,8 +19,8 @@
 
         <v-list-item>
           <v-list-item-icon>
-            <v-icon color="error" v-if="dockerComposeVersion === ''">error</v-icon>
-            <v-icon color="success" v-else>check</v-icon>
+            <v-icon color="error" v-if="dockerComposeVersion === ''">mdi-alert-circle-outline</v-icon>
+            <v-icon color="success" v-else>mdi-check</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>
@@ -33,8 +33,8 @@
 
         <v-list-item>
           <v-list-item-icon>
-            <v-icon color="error" v-if="laradockPath === ''">error</v-icon>
-            <v-icon color="success" v-else>check</v-icon>
+            <v-icon color="error" v-if="laradockPath === ''">mdi-alert-circle-outline</v-icon>
+            <v-icon color="success" v-else>mdi-check</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>
@@ -47,8 +47,8 @@
 
         <v-list-item>
           <v-list-item-icon>
-            <v-icon color="error" v-if="appStatus.dotEnv">error</v-icon>
-            <v-icon color="success" v-else>check</v-icon>
+            <v-icon color="error" v-if="appStatus.dotEnv">mdi-alert-circle-outline</v-icon>
+            <v-icon color="success" v-else>mdi-check</v-icon>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>.env</v-list-item-title>
