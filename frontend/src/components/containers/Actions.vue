@@ -1,6 +1,15 @@
 
 <template>
   <div>
+    <v-tooltip bottom v-if="item.state === 'Up'">
+      <template v-slot:activator="{ on }">
+        <v-btn small icon @click="logsContainer(item.name)" v-on="on">
+          <v-icon :size="15">fa-bars</v-icon>
+        </v-btn>
+      </template>
+      <span>Show container logs</span>
+    </v-tooltip>
+
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn
@@ -41,7 +50,7 @@
           <v-icon>arrow_upward</v-icon>
         </v-btn>
       </template>
-      <span>Build the containers</span>
+      <span>Up the containers</span>
     </v-tooltip>
 
     <v-menu offset-y>

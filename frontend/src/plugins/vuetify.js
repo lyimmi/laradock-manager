@@ -5,14 +5,14 @@ import "@fortawesome/fontawesome-free/css/all.css"; // Ensure you are using css-
 
 import Vue from "vue";
 import Vuetify from "vuetify/lib";
-import LRU from "lru-cache"
+import LRU from "lru-cache";
 
 Vue.use(Vuetify);
 
 const themeCache = new LRU({
   max: 10,
-  maxAge: 1000 * 60 * 60, // 1 hour
-})
+  maxAge: 1000 * 60 * 60 // 1 hour
+});
 
 export default new Vuetify({
   icons: {
@@ -21,18 +21,17 @@ export default new Vuetify({
   theme: {
     options: {
       themeCache,
-      minifyTheme: function (css) {
-        return process.env.NODE_ENV === 'production'
-          ? css.replace(/[\r\n|\r|\n]/g, '')
-          : css
-      },
+      minifyTheme: function(css) {
+        return process.env.NODE_ENV === "production"
+          ? css.replace(/[\r\n|\r|\n]/g, "")
+          : css;
+      }
     },
     themes: {
       dark: {
         primary: "#00bcd4",
         secondary: "#607d8b",
         accent: "#205cae",
-        error: "#ffc107",
         warning: "#009688",
         info: "#2196f3",
         success: "#4caf50"

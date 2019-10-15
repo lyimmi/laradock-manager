@@ -18,7 +18,6 @@
             <v-list-item @click="$root.$emit('refreshData')" prevent>
               <v-list-item-action>
                 <v-icon>refresh</v-icon>
-                <div class="refresh-counter">{{60-refreshCounter}}</div>
               </v-list-item-action>
               <v-list-item-content>
                 <v-list-item-title>Refresh</v-list-item-title>
@@ -89,17 +88,6 @@ export default {
     this.$vuetify.theme.dark = true;
     this.waitForSettings(() => {
       this.$vuetify.theme.dark = this.darkTheme;
-    });
-    //Data refresh
-    setInterval(() => {
-      this.refreshCounter++;
-      if (this.refreshCounter === 60) {
-        this.$root.$emit("refreshData");
-        this.refreshCounter = 0;
-      }
-    }, 1000);
-    this.$root.$on("resetRefreshConter", () => {
-      this.refreshCounter = 0;
     });
 
     //Router settings

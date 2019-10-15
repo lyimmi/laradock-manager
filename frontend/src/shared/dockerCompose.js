@@ -435,6 +435,14 @@ export default {
       });
     },
 
+    logsContainer(container, callback) {
+      window.backend.Compose.Logs(container).then(() => {
+        if (typeof callback === "function") {
+          callback();
+        }
+      });
+    },
+
     /**
      * Stop container exec
      *

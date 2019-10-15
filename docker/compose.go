@@ -253,6 +253,19 @@ func (t *Compose) Exec(container string, user string) string {
 	return "terminal started"
 }
 
+// Logs show logs
+func (t *Compose) Logs(container string) string {
+	cmd := exec.Command("gnome-terminal", "--", "docker-compose", "logs", "-f", "--tail=100")
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("start", "cmd", "/k", "docker-compose", "logs", "-f", "--tail=100")
+	}
+	cmd.Dir = filepath.Join(t.laradockPath)
+	if err := cmd.Run(); err != nil {
+		return "Error: " + fmt.Sprint(err)
+	}
+	return "Logs Started"
+}
+
 //DotEnvContent Return dot env contents
 func (t *Compose) DotEnvContent() map[string]string {
 	env, err := godotenv.Read(filepath.Join(t.laradockPath, ".env"))
