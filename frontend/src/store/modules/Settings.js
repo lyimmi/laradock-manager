@@ -5,10 +5,14 @@ const namespaced = true;
 const state = {
   laradockPath: "",
   terminalPath: "/usr/bin/gnome-terminal",
+  containerPrefix: "laradock",
   darkTheme: true
 };
 
 const mutations = {
+  SET_CONTAINER_PREFIX(state, payload) {
+    Vue.set(state, "containerPrefix", payload);
+  },
   SET_LARADOCK_PATH(state, payload) {
     Vue.set(state, "laradockPath", payload);
   },
@@ -21,6 +25,9 @@ const mutations = {
 };
 
 const getters = {
+  containerPrefix(state) {
+    return state.containerPrefix;
+  },
   laradockPath(state) {
     return state.laradockPath;
   },
@@ -33,6 +40,9 @@ const getters = {
 };
 
 const actions = {
+  setContainerPrefix(context, payload) {
+    context.commit("SET_CONTAINER_PREFIX", payload);
+  },
   setLaradockPath(context, payload) {
     context.commit("SET_LARADOCK_PATH", payload);
   },

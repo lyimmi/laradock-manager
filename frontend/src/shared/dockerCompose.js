@@ -24,7 +24,7 @@ export default {
   computed: {
     ...mapGetters("Containers", ["favoritContainers", "availableContainers"]),
     ...mapGetters("Status", ["appStatus"]),
-    ...mapGetters("Settings", ["laradockPath"])
+    ...mapGetters("Settings", ["laradockPath", "containerPrefix"])
   },
   mounted() {
     this.$root.$on("containersLoading", () => {
@@ -43,7 +43,7 @@ export default {
     ...mapActions("Status", ["setAppStatus"]),
     ...mapActions("Containers", ["setAvailableContainers", "updateAvailableContainers"]),
 
-    filterEnvGroup: _.debounce(function() {
+    filterEnvGroup: _.debounce(function () {
       if (this.envFilter === null || this.envFilter === "") {
         this.dotEnvContentGroupsFiltered = this.dotEnvContentGroups;
         return;
@@ -162,7 +162,7 @@ export default {
             // Sort by built containers
             containers.sort((a, b) => {
               if (a.favorite !== b.favorite) {
-                return  a.favorite ? -1 : 1;
+                return a.favorite ? -1 : 1;
               }
               return ("" + b.state).localeCompare(a.state);
             });
@@ -182,6 +182,7 @@ export default {
     getContainers(callback) {
       this.waitForSettings(() => {
         let self = this;
+        const containerPrefixTag = self.containerPrefix + "_";
         self.$root.$emit("containersLoading");
         window.backend.Compose.Get().then(result => {
           if (result.startsWith("Error:")) {
@@ -195,7 +196,7 @@ export default {
             if (k > 1 && line[0] !== "") {
               containers.push({
                 code: line[0],
-                name: line[0].replace("laradock_", "").replace("_1", ""),
+                name: line[0].replace(containerPrefixTag, "").replace("_1", ""),
                 command: line[1],
                 state: line[2],
                 ports: line[3]

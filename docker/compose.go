@@ -22,6 +22,7 @@ type Compose struct {
 	containerExec       bool
 	containerConnected  bool
 	availableContainers map[string]string
+	dotEnvcontent       map[string]string
 }
 
 // envStruct
@@ -31,6 +32,7 @@ type envStruck struct {
 //NewDockerCompose Create a new DockerCompose struct
 func NewDockerCompose(path string) *Compose {
 	result := &Compose{laradockPath: path}
+	result.dotEnvcontent = result.DotEnvContent()
 	return result
 }
 

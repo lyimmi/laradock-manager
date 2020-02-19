@@ -11,6 +11,7 @@ if (process.env.NODE_ENV == "production") {
 }
 
 module.exports = {
+  transpileDependencies:  ["vuetify"],
   chainWebpack: config => {
     let limit = 9999999999999999;
     config.module

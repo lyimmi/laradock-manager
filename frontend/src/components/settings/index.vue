@@ -23,7 +23,17 @@
                 <v-card flat>
                   <v-card-text>
                     <v-row>
-                      <v-col cols="12" sm="6">
+                      <v-col cols="12" sm="4">
+                        <v-text-field
+                          v-model="containerPrefix"
+                          @click="selectLaradockDirectory"
+                          label="Container prefix"
+                          placeholder="container prefix eg. laradock"
+                          ref="laradockPathInput"
+                        >
+                        </v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="8">
                         <v-text-field
                           v-model="dockerComposeYmlPath"
                           @click="selectLaradockDirectory"
@@ -35,6 +45,7 @@
                         >
                           <template v-slot:append>
                             <v-btn
+                            small
                               depressed
                               tile
                               color="secondary"
@@ -47,7 +58,7 @@
                           </template>
                         </v-text-field>
                       </v-col>
-                      <v-col cols="12" sm="6" v-if="false">
+                      <v-col cols="12" sm="8" v-if="false">
                         <v-text-field
                           v-model="terminalPathTmp"
                           @click="selectTerminalExecutable"
@@ -71,6 +82,8 @@
                           </template>
                         </v-text-field>
                       </v-col>
+                    </v-row>
+                    <v-row>
                       <v-col cols="12" sm="6">
                         <v-switch label="Dark theme" color="primary" v-model="darkTheme"></v-switch>
                       </v-col>
@@ -136,6 +149,7 @@ export default {
     return {
       dockerComposeYmlPath: "",
       terminalPathTmp: "",
+      // containerPrefix: "laradock",
       tab: null,
       form: {}
     };
@@ -149,6 +163,14 @@ export default {
   },
   computed: {
     ...mapGetters("Settings", ["laradockPath", "terminalPath"]),
+    containerPrefix: {
+      set(value) {
+        this.$store.dispatch("Settings/setContainerPrefix", value);
+      },
+      get() {
+        return this.$store.getters["Settings/containerPrefix"];
+      }
+    },
     darkTheme: {
       set(value) {
         this.$store.dispatch("Settings/setDarkTheme", value);
