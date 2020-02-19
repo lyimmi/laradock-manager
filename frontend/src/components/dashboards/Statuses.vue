@@ -54,6 +54,15 @@
             <v-list-item-title>.env</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        
+        <v-list-item>
+          <v-list-item-icon>
+            <v-icon color="success">mdi-check</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>{{containerPrefix}}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-card-text>
   </v-card>
@@ -61,10 +70,14 @@
 
 <script>
 import dockerCompose from "../../shared/dockerCompose";
+import { mapGetters } from "vuex";
 
 export default {
   name: "statuses",
   mixins: [dockerCompose],
+  computed:{
+    ...mapGetters("Settings", ["containerPrefix"]),
+  },
   mounted() {
     this.checkDotEnv();
     this.checkDockerVersion();

@@ -51,11 +51,8 @@ export default {
       let result = {},
         conditions = this.envFilter.split(" ");
       for (let key in this.dotEnvContentGroups) {
-        if (this.dotEnvContentGroups.hasOwnProperty(key)) {
           for (let k in this.dotEnvContentGroups[key]) {
-            if (
-              this.dotEnvContentGroups[key].hasOwnProperty(k) &&
-              conditions.every(el =>
+            if (conditions.every(el =>
                 this.dotEnvContentGroups[key][k].field.includes(
                   el.toUpperCase()
                 )
@@ -67,7 +64,6 @@ export default {
               result[key].push(this.dotEnvContentGroups[key][k]);
             }
           }
-        }
       }
       this.dotEnvContentGroupsFiltered = result;
     }, 350),
