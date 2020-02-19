@@ -26,10 +26,9 @@
                       <v-col cols="12" sm="4">
                         <v-text-field
                           v-model="containerPrefix"
-                          @click="selectLaradockDirectory"
                           label="Container prefix"
                           placeholder="container prefix eg. laradock"
-                          ref="laradockPathInput"
+                          ref="containerPrefix"
                         >
                         </v-text-field>
                       </v-col>
