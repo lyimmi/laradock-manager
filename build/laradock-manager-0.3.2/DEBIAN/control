@@ -1,0 +1,19 @@
+Package: laradock-manager
+Version: 0.3.2
+Section: devel
+Priority: optional
+Architecture: amd64
+Installed-Size: 4800
+Maintainer: Zámbó Levetne <levente.zambo@gmail.com>
+Homepage: https://github.com/Lyimmi/laradock-manager
+Description: Laradock Manager
+  A simple application for managing laradock containers.
+  Developed and tested only on Ubuntu 19.04/18.04
+ .
+  Made with https://wails.app/ (go & vue.js & vuetify)
+ .
+  Usage
+  In order to use this your current user need to be able to access docker without sudo
+  Create the docker group: $ sudo groupadd docker
+  Add your user to the docker group: $ sudo usermod -aG docker $USER
+  Log out and log back in so that your group membership is re-evaluated. ($ newgrp docker)

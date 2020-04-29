@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.1
+Type=Application
+Name=Laradock Manager
+Comment=Simple application for managing laradock containers
+Icon=/opt/laradock-manager/laradock-manager.png
+Exec=/opt/laradock-manager/laradock-manager
+Actions=
+Categories=Development;
+StartupNotify=true
