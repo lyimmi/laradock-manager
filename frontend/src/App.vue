@@ -62,71 +62,53 @@
     <v-snackbar
       v-for="(error, index) in errors"
       :key="index"
-      v-model="errors[index].state"
+      v-model="error.state"
       color="error"
       multi-line
-      :timeout="15000"
+      :timeout="error.timeout"
       :absolute="false"
       top
     >
       {{ error.text }}
-      <v-btn text @click="hideError(index)">Close</v-btn>
+      <v-btn text @click="clearError(index)">Close</v-btn>
     </v-snackbar>
   </v-app>
 </template>
 
 <script>
-//import AppMenu from "./components/partials/app-menu";
-import dockerCompose from "./shared/dockerCompose";
-import { mapActions, mapGetters } from "vuex";
+// import { mapActions, mapGetters } from "vuex";
+import DockerMixin from "./shared/dockerMixin";
+import ErrorHandler from "./shared/errorHandlerMixin"
 
 export default {
   name: "app",
   //components: { AppMenu },
-  mixins: [dockerCompose],
-  mounted() {
-    this.$vuetify.theme.dark = true;
-    this.waitForSettings(() => {
-      this.$vuetify.theme.dark = this.darkTheme;
-    });
-
-    //Router settings
-    this.$router.push("home");
-    this.$root.$on("showError", error => this.addError(error));
-  },
+  mixins: [DockerMixin, ErrorHandler],
   data: () => ({
-    errors: [],
     drawer: null,
     refreshCounter: 0
   }),
+  created() {
+    this.$vuetify.theme.dark = true;
+    this.$router.push("home");
+    this.setUpMasterErrorHandler();
+  },
+  mounted() {
+    //Router settings
+    setTimeout(() => {
+
+    this.setError("ajaj 1");
+    this.setError("ajaj 2");
+    this.setError("ajaj 3");
+    }, 2000)
+  },
   computed: {
-    ...mapGetters("Settings", ["laradockPath", "darkTheme"])
   },
   methods: {
-    ...mapActions("Settings", ["setLaradockPath"]),
-    openBrowser(url) {
-      window.wails.Browser = { OpenURL: url };
-    },
-    addError(error) {
-      this.errors.push({
-        text: error.substring(0, 255),
-        state: true
-      });
-      this.cleanErrors();
-    },
-    hideError(index) {
-      this.errors[index].state = false;
-      setTimeout(() => {
-        this.cleanErrors();
-      }, 1500);
-    },
-    cleanErrors() {
-      this.errors.forEach((v, i) => {
-        if (!v.state) {
-          this.errors.splice(i, 1);
-        }
-      });
+    log(l) {
+      console.log(l);
     }
+    // ...mapActions("Settings", ["setLaradockPath"])
   }
 };
 </script>

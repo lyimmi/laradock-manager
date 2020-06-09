@@ -7,6 +7,7 @@ import VueRouter from "vue-router";
 import routes from "./routes";
 import App from "./App.vue";
 import config from "./config/default.json";
+import Ticker from "./shared/classes/ticker"
 
 Vue.use(VueRouter);
 const router = new VueRouter({
@@ -18,6 +19,7 @@ router.replace({ path: "*", redirect: "/" });
 Vue.config.productionTip = false;
 Vue.config.devtools = true;
 Vue.prototype.$config = config;
+Vue.prototype.$ticker = new Ticker(250);
 
 Wails.Init(() => {
   new Vue({
