@@ -15,14 +15,6 @@
           mini-variant-width="60"
         >
           <v-list dense>
-            <v-list-item @click="$root.$emit('refreshData')" prevent>
-              <v-list-item-action>
-                <v-icon>mdi-refresh</v-icon>
-              </v-list-item-action>
-              <v-list-item-content>
-                <v-list-item-title>Refresh</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
             <v-list-item to="/">
               <v-list-item-action>
                 <v-icon>mdi-view-dashboard</v-icon>
@@ -41,7 +33,7 @@
             </v-list-item>
             <v-list-item to="/settings">
               <v-list-item-action>
-                <v-icon>mdi-settings-outline</v-icon>
+                <v-icon>mdi-cog</v-icon>
               </v-list-item-action>
               <v-list-item-content>
                 <v-list-item-title>Settings</v-list-item-title>
@@ -72,13 +64,28 @@
       {{ error.text }}
       <v-btn text @click="clearError(index)">Close</v-btn>
     </v-snackbar>
+    <v-fab-transition>
+      <v-btn
+        @click="$root.$emit('refreshData')"
+        fab
+        dark
+        bottom
+        right
+        fixed
+        small
+        color="primary"
+        class="v-btn--example"
+      >
+        <v-icon>mdi-refresh</v-icon>
+      </v-btn>
+    </v-fab-transition>
   </v-app>
 </template>
 
 <script>
 // import { mapActions, mapGetters } from "vuex";
 import DockerMixin from "./shared/dockerMixin";
-import ErrorHandler from "./shared/errorHandlerMixin"
+import ErrorHandler from "./shared/errorHandlerMixin";
 
 export default {
   name: "app",
@@ -90,20 +97,13 @@ export default {
   }),
   created() {
     this.$vuetify.theme.dark = true;
-    this.$router.push("home");
+    if (this.$router.history.current.path !== "/home") {
+      this.$router.push("home");
+    }
     this.setUpMasterErrorHandler();
   },
-  mounted() {
-    //Router settings
-    setTimeout(() => {
-
-    this.setError("ajaj 1");
-    this.setError("ajaj 2");
-    this.setError("ajaj 3");
-    }, 2000)
-  },
-  computed: {
-  },
+  mounted() {},
+  computed: {},
   methods: {
     log(l) {
       console.log(l);
