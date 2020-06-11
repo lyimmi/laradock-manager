@@ -12,7 +12,7 @@
       </v-card-title>
       <v-data-table
         :loading="containersLoading"
-        sortBy="state"
+        sortBy="favorite"
         :sortDesc="true"
         :search="search"
         v-model="selected"
@@ -77,7 +77,13 @@
 
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn small class="ml-5 mr-1" @click="buildContainer(item.name)" v-bind="attrs" v-on="on">
+              <v-btn
+                small
+                class="ml-5 mr-1"
+                @click="buildContainer(item.name)"
+                v-bind="attrs"
+                v-on="on"
+              >
                 <v-icon>mdi-docker</v-icon>
               </v-btn>
             </template>
@@ -95,6 +101,21 @@
         </template>
       </v-data-table>
     </v-skeleton-loader>
+    <v-fab-transition>
+      <v-btn
+        @click="loadConstainers"
+        fab
+        dark
+        bottom
+        right
+        fixed
+        small
+        color="primary"
+        class="v-btn--example"
+      >
+        <v-icon>mdi-refresh</v-icon>
+      </v-btn>
+    </v-fab-transition>
   </v-card>
 </template>
 <script>

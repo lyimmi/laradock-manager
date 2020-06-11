@@ -23,12 +23,12 @@
                 <v-list-item-title>Dashboard</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item to="/containers">
+            <v-list-item to="/stats">
               <v-list-item-action>
                 <v-icon>mdi-docker</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title>Containers</v-list-item-title>
+                <v-list-item-title>Stats</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item to="/settings">
@@ -66,21 +66,6 @@
       {{ error.text }}
       <v-btn text @click="clearError(index)">Close</v-btn>
     </v-snackbar>
-    <v-fab-transition>
-      <v-btn
-        @click="$root.$emit('refreshData')"
-        fab
-        dark
-        bottom
-        right
-        fixed
-        small
-        color="primary"
-        class="v-btn--example"
-      >
-        <v-icon>mdi-refresh</v-icon>
-      </v-btn>
-    </v-fab-transition>
     <confirm-dialog ref="confirm" />
   </v-app>
 </template>

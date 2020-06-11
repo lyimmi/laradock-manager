@@ -80,6 +80,12 @@ export default {
                     }
                 })
         },
+        getStats() {
+            window.backend.Compose.Stats()
+        },
+        stopStats() {
+            window.backend.Compose.StatsStop()
+        },
         handleResponse(res) {
             try {
                 res = JSON.parse(res)
