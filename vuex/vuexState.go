@@ -1,6 +1,7 @@
 package vuex
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -8,60 +9,69 @@ import (
 	"path"
 )
 
-//Store store's content
+//Store is vuex store's content
 type Store struct {
-	Settings map[string]string `json:"settings"`
+	Containers struct {
+		Favorites           []string `json:"favoritContainers"`
+		AvailableContainers []struct {
+			Name     string `json:"name"`
+			State    string `json:"state"`
+			Favorite bool   `json:"favorite"`
+		} `json:"availableContainers"`
+	} `json:"Containers"`
+	Settings struct {
+		LaradockPath    string `json:"laradockPath"`
+		TerminalPath    string `json:"terminalPath"`
+		ContainerPrefix string `json:"containerPrefix"`
+		DarkTheme       bool   `json:"darkTheme"`
+	} `json:"Settings"`
+	Status struct {
+		Env           string `json:"env"`
+		Docker        string `json:"docker"`
+		DockerCompose string `json:"dockerCompose"`
+	} `json:"Status"`
 }
 
 //State struct
 type State struct {
+	Store     Store
 	StorePath string
 }
 
 //NewVuexState Create a new VuexState struct
 func NewVuexState(storePath string) *State {
-	return &State{StorePath: storePath}
-}
-
-//homeDir return user's home directory
-func homeDir() (string, error) {
 	usr, err := user.Current()
 	if err != nil {
-		return "", err
+		log.Fatal(err)
 	}
-	return usr.HomeDir, nil
+	return &State{StorePath: path.Join(usr.HomeDir, storePath+"-vuex.json")}
 }
 
 //Write Writes vuex store data to file
-func (t *State) Write(data string) bool {
-	homeDir, err := homeDir()
+func (t *State) Write(data string) {
+	f, err := os.Create(t.StorePath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	f, err := os.Create(path.Join(homeDir, t.StorePath+"-vuex.json"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	f.Write([]byte(data))
+	byteData := []byte(data)
+	f.Write(byteData)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if f.Close() != nil {
 		log.Fatal(err)
 	}
-	return true
+	err = json.Unmarshal(byteData, &t.Store)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 //Read Reads vuex store data from file
 func (t *State) Read() string {
-	storePath := t.StorePath + "-vuex.json"
-	homeDir, err := homeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = os.Stat(storePath)
+	_, err := os.Stat(t.StorePath)
 	if os.IsNotExist(err) {
-		f, err := os.Create(path.Join(homeDir, storePath))
+		f, err := os.Create(t.StorePath)
 		f.Write([]byte("{}"))
 		if err != nil {
 			log.Fatal(err)
@@ -71,10 +81,23 @@ func (t *State) Read() string {
 		}
 	}
 
-	data, err := ioutil.ReadFile(path.Join(homeDir, storePath))
+	data, err := ioutil.ReadFile(t.StorePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	err = json.Unmarshal(data, &t.Store)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return string(data)
+}
+
+//ClearSettings delete vuex setting file
+func (t *State) ClearSettings() bool {
+	err := os.Remove(t.StorePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return true
 }

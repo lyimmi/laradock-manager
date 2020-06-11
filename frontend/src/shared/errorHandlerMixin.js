@@ -21,6 +21,13 @@ export default {
                     }
                 });
             }, 10)
+            window.wails.Events.On("backendError", (message) => {
+                this.setError(atob(message))
+            });
+
+            window.wails.Events.On("error", (message) => {
+                this.setError(message)
+            });
         },
 
         /**
@@ -47,7 +54,7 @@ export default {
          * @param {String} text 
          * @param {Number} timout 
          */
-        setError(text, timeout = 10000) {
+        setError(text, timeout = 100000) {
             this.$root.$emit("errorSet", {
                 text: text,
                 timeout: timeout,

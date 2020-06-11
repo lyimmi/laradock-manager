@@ -15,7 +15,7 @@
           mini-variant-width="60"
         >
           <v-list dense>
-            <v-list-item to="/">
+            <v-list-item to="/home">
               <v-list-item-action>
                 <v-icon>mdi-view-dashboard</v-icon>
               </v-list-item-action>
@@ -46,9 +46,11 @@
     <!-- menu end -->
     <!-- content start -->
     <v-content>
-      <transition name="fade" mode="out-in">
-        <router-view></router-view>
-      </transition>
+      <v-container fluid>
+        <transition name="fade" mode="out-in">
+          <router-view></router-view>
+        </transition>
+      </v-container>
     </v-content>
     <!-- content end -->
     <v-snackbar
@@ -79,31 +81,37 @@
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
     </v-fab-transition>
+    <confirm-dialog ref="confirm" />
   </v-app>
 </template>
 
 <script>
-// import { mapActions, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
 import DockerMixin from "./shared/dockerMixin";
 import ErrorHandler from "./shared/errorHandlerMixin";
+import ConfirmDialog from "./components/confirmDialog";
 
 export default {
   name: "app",
-  //components: { AppMenu },
+  components: { ConfirmDialog },
   mixins: [DockerMixin, ErrorHandler],
   data: () => ({
     drawer: null,
     refreshCounter: 0
   }),
   created() {
-    this.$vuetify.theme.dark = true;
+    this.$vuetify.theme.dark = this.darkTheme;
     if (this.$router.history.current.path !== "/home") {
       this.$router.push("home");
     }
     this.setUpMasterErrorHandler();
   },
-  mounted() {},
-  computed: {},
+  mounted() {
+    this.$root.$refs.confirm = this.$refs.confirm;
+  },
+  computed: {
+    ...mapGetters("Settings", ["darkTheme"])
+  },
   methods: {
     log(l) {
       console.log(l);

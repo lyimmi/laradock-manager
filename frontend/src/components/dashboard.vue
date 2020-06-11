@@ -1,28 +1,22 @@
 <template>
-  <v-container></v-container>
+  <v-row>
+    <v-col cols="12" class="pt-0">
+      <container-list />
+    </v-col>
+  </v-row>
 </template>
 
 <script>
+import ContainerList from "./containers/containerList";
 export default {
+  components: { ContainerList },
   data: () => {
     return {
-      ojo: 0
     };
   },
   created() {
-    const id = this.$ticker.setTicker(() => {
-      this.ojo++;
-
-      if (this.ojo === 5) {
-        this.$ticker.clearTicker(id);
-      }
-      console.log("ojojo");
-    }, 5);
   },
-  mounted(){
-    this.$ticker.nextTick(() => {
-      console.log("ájájájá")
-    })
+  mounted() {
   }
 };
 </script>

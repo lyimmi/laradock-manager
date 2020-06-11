@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 
+	b64 "encoding/base64"
+
 	"github.com/joho/godotenv"
 	"github.com/labstack/gommon/log"
 	"github.com/lyimmi/laradock-manager/vuex"
@@ -20,13 +22,8 @@ import (
 
 //Compose DockerCompose struct
 type Compose struct {
-	laradockPath        string
-	terminalPath        string
-	containerExec       bool
-	containerConnected  bool
-	availableContainers map[string]string
-	dotEnvcontent       map[string]string
-	runtime             *wails.Runtime
+	vuexState *vuex.State
+	runtime   *wails.Runtime
 }
 
 // envStruct
@@ -37,6 +34,12 @@ type envStruck struct {
 type Response struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+}
+
+type container struct {
+	Name     string `json:"name"`
+	State    string `json:"state"`
+	Favorite bool   `json:"favorite"`
 }
 
 // returnResponse a response json
@@ -56,32 +59,26 @@ func (t *Compose) WailsInit(runtime *wails.Runtime) error {
 
 //NewDockerCompose Create a new DockerCompose struct
 func NewDockerCompose(vuexState *vuex.State) *Compose {
-	vuexStore := vuex.Store{}
-	err := json.Unmarshal([]byte(vuexState.Read()), &vuexStore)
-	if err != nil {
-		log.Fatal(err)
-	}
-	result := &Compose{laradockPath: vuexStore.Settings["laradockPath"]}
-	result.dotEnvcontent = result.DotEnvContent()
-	return result
+	compose := &Compose{vuexState: vuexState}
+	vuexState.Read()
+	return compose
 }
 
 //SetLaradockPath Check if .env file exists
 func (t *Compose) SetLaradockPath(path string) bool {
-	t.laradockPath = path
+	t.vuexState.Store.Settings.LaradockPath = path
 	return true
 }
 
 //SetTerminalPath Check if .env file exists
 func (t *Compose) SetTerminalPath(path string) bool {
-	t.terminalPath = path
+	t.vuexState.Store.Settings.TerminalPath = path
 	return true
 }
 
 //CheckDotEnv Check if .env file exists
 func (t *Compose) CheckDotEnv() string {
-	t.runtime.Events.Emit("test", "asdasds")
-	if _, err := os.Stat(filepath.Join(t.laradockPath, ".env")); err != nil {
+	if _, err := os.Stat(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env")); err != nil {
 		return returnResponse(true, "false")
 	}
 	return returnResponse(true, "true")
@@ -119,13 +116,13 @@ func (t *Compose) CheckDockerComposeVersion() string {
 
 //CopyEnv Make the .env file form env-example
 func (t *Compose) CopyEnv() string {
-	sourceFile, err := os.Open(filepath.Join(t.laradockPath, "env-example"))
+	sourceFile, err := os.Open(filepath.Join(t.vuexState.Store.Settings.LaradockPath, "env-example"))
 	if err != nil {
 		return returnResponse(false, "false")
 	}
 
 	// Create new file
-	newFile, err := os.Create(filepath.Join(t.laradockPath, ".env"))
+	newFile, err := os.Create(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env"))
 	if err != nil {
 		return returnResponse(false, "false")
 	}
@@ -144,39 +141,107 @@ func (t *Compose) CopyEnv() string {
 	return returnResponse(false, "false")
 }
 
-//Get run docker-compose ps and parse the output
-func (t *Compose) Get() string {
-	cmd := exec.Command("docker-compose", "ps")
-	cmd.Dir = filepath.Join(t.laradockPath)
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-
-	if err != nil {
-		return returnResponse(false, fmt.Sprint(err)+": "+stderr.String())
-	}
-
-	reg := regexp.MustCompile(`\n`)
-	lines := reg.Split(out.String(), -1)
-	var c [][]string
-	for _, e := range lines {
-		reg = regexp.MustCompile(`\s\s+`)
-		c = append(c, reg.Split(e, -1))
-	}
-
-	s, err := json.Marshal(c)
-	if err != nil {
-		return returnResponse(false, fmt.Sprint(err)+": "+stderr.String())
-	}
-	return returnResponse(true, string(s))
+func (t *Compose) listContainers() {
 }
 
-//GetAvailables run docker-compose ps --services and parse the output
-func (t *Compose) GetAvailables() string {
+//GetContainersWithStatuses run docker-compose ps and parse the output
+func (t *Compose) GetContainersWithStatuses() string {
+	var stdout, stderr bytes.Buffer
+	var containers []container
+
+	//Get docker-compose ps
+	cmd := exec.Command("docker-compose", "--no-ansi", "ps", "-a")
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	if err != nil {
+		t.emitError(errStr)
+		return returnResponse(false, "Error: "+fmt.Sprint(err)+": "+errStr)
+	}
+	reg := regexp.MustCompile("\n" + t.vuexState.Store.Settings.ContainerPrefix + "_")
+	lines := reg.Split(outStr, -1)
+	for i, e := range lines {
+		reg = regexp.MustCompile(`\s\s+`)
+		contArr := reg.Split(e, -1)
+		if i > 0 {
+			if len(contArr) > 2 {
+				name := strings.Replace(contArr[0], "_1", "", -1)
+				state := "Up"
+				favorite := false
+				for _, f := range t.vuexState.Store.Containers.Favorites {
+					if f == name {
+						favorite = true
+					}
+				}
+				if strings.Contains(contArr[2], "Exit") {
+					state = "Stopped"
+				}
+				cont := container{
+					Name:     name,
+					State:    state,
+					Favorite: favorite,
+				}
+				containers = append(containers, cont)
+			}
+		}
+	}
+
+	//Get all available containers from yml containers
+	stdout, stderr = bytes.Buffer{}, bytes.Buffer{}
+	outStr, errStr = "", ""
+
+	cmd = exec.Command("docker-compose", "--no-ansi", "ps", "--services")
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	outStr, errStr = string(stdout.Bytes()), string(stderr.Bytes())
+	if err != nil {
+		t.emitError("Error: " + fmt.Sprint(err) + ": " + errStr)
+		return returnResponse(false, "Error: "+fmt.Sprint(err)+": "+errStr)
+	}
+
+	reg = regexp.MustCompile(`\n`)
+	lines = reg.Split(outStr, -1)
+	lines = lines[:len(lines)-1]
+
+	for _, line := range lines {
+		ok := true
+		for _, c := range containers {
+			if c.Name == line {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			favorite := false
+			for _, f := range t.vuexState.Store.Containers.Favorites {
+				if f == line {
+					favorite = true
+				}
+			}
+			cont := container{
+				Name:     line,
+				State:    "Down",
+				Favorite: favorite,
+			}
+			containers = append(containers, cont)
+		}
+	}
+	res, resErr := json.Marshal(containers)
+	if resErr != nil {
+		t.emitError("Error: " + fmt.Sprint(resErr))
+		return returnResponse(false, "Error: "+fmt.Sprint(resErr))
+	}
+	return returnResponse(true, string(res))
+}
+
+//GetContainers run docker-compose ps --services and parse the output
+func (t *Compose) GetContainers() string {
 	cmd := exec.Command("docker-compose", "ps", "--services")
-	cmd.Dir = filepath.Join(t.laradockPath)
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -184,6 +249,7 @@ func (t *Compose) GetAvailables() string {
 	err := cmd.Run()
 
 	if err != nil {
+		t.emitError(fmt.Sprint(err) + ": " + stderr.String())
 		return returnResponse(false, fmt.Sprint(err)+": "+stderr.String())
 	}
 
@@ -191,6 +257,7 @@ func (t *Compose) GetAvailables() string {
 	lines := reg.Split(out.String(), -1)
 	s, err := json.Marshal(lines)
 	if err != nil {
+		t.emitError(fmt.Sprint(err) + ": " + stderr.String())
 		return returnResponse(false, fmt.Sprint(err)+": "+stderr.String())
 	}
 	return returnResponse(true, string(s))
@@ -202,14 +269,14 @@ func (t *Compose) Toggle(state string, containers string) string {
 	args := []string{state}                        //prepare args
 	args = append(args, cSlice...)                 //merge all arguments
 	cmd := exec.Command("docker-compose", args...) //build command
-	cmd.Dir = t.laradockPath
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		t.emitError(fmt.Sprint(err) + ": " + stderr.String())
 		return returnResponse(false, "false")
 	}
 	return returnResponse(true, "true")
@@ -218,7 +285,7 @@ func (t *Compose) Toggle(state string, containers string) string {
 //Down Down all the containers
 func (t *Compose) Down() string {
 	cmd := exec.Command("docker-compose", "down")
-	cmd.Dir = t.laradockPath
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -226,7 +293,7 @@ func (t *Compose) Down() string {
 	err := cmd.Run()
 
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		t.emitError(fmt.Sprint(err) + ": " + stderr.String())
 		return returnResponse(false, "false")
 	}
 	return returnResponse(true, "true")
@@ -238,7 +305,7 @@ func (t *Compose) Up(containers string) string {
 	args := []string{"up", "-d", "--no-build"}     //prepare args
 	args = append(args, cSlice...)                 //merge all arguments
 	cmd := exec.Command("docker-compose", args...) //build command
-	cmd.Dir = t.laradockPath
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -246,7 +313,7 @@ func (t *Compose) Up(containers string) string {
 	err := cmd.Run()
 
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		t.emitError(fmt.Sprint(err) + ": " + stderr.String())
 		return returnResponse(false, "false")
 	}
 	return returnResponse(true, "true")
@@ -265,7 +332,7 @@ func (t *Compose) Build(containers string, force bool) string {
 	args = append(args, cSlice...)                 //merge all arguments
 	cmd := exec.Command("docker-compose", args...) //build command
 
-	cmd.Dir = t.laradockPath
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -273,7 +340,7 @@ func (t *Compose) Build(containers string, force bool) string {
 	err := cmd.Run()
 
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		t.emitError(fmt.Sprint(err) + ": " + stderr.String())
 		return returnResponse(false, "false")
 	}
 	return returnResponse(true, "true")
@@ -287,7 +354,7 @@ func (t *Compose) Exec(container string, user string) string {
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("start", "cmd", "/k", "docker-compose", "exec", "--user="+user, container, "bash")
 	}
-	cmd.Dir = filepath.Join(t.laradockPath)
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	if err := cmd.Run(); err != nil {
 		return returnResponse(false, fmt.Sprint(err))
 	}
@@ -300,7 +367,7 @@ func (t *Compose) Logs(container string) string {
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("start", "cmd", "/k", "docker-compose", "logs", "-f", "--tail=100")
 	}
-	cmd.Dir = filepath.Join(t.laradockPath)
+	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	if err := cmd.Run(); err != nil {
 		return returnResponse(false, fmt.Sprint(err))
 	}
@@ -309,16 +376,17 @@ func (t *Compose) Logs(container string) string {
 
 //DotEnvContent Return dot env contents
 func (t *Compose) DotEnvContent() map[string]string {
-	env, err := godotenv.Read(filepath.Join(t.laradockPath, ".env"))
+	env, err := godotenv.Read(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env"))
 	if err != nil {
-		fmt.Println("Error loading .env file")
+		t.emitError("Error loading .env file")
+		log.Fatal(err)
 	}
 	return env
 }
 
 //SaveDotEnvContent save dot env contents
 func (t *Compose) SaveDotEnvContent(data string) string {
-	f, err := os.Create(filepath.Join(t.laradockPath, ".env"))
+	f, err := os.Create(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env"))
 	if err != nil {
 		return returnResponse(false, fmt.Sprint(err))
 	}
@@ -348,4 +416,9 @@ func (t *Compose) regSplit(text string, delimeter string) []string {
 	}
 	result[len(indexes)] = text[laststart:len(text)]
 	return result
+}
+
+func (t *Compose) emitError(err string) {
+	uEnc := b64.URLEncoding.EncodeToString([]byte(err))
+	t.runtime.Events.Emit("backendError", uEnc)
 }

@@ -22,6 +22,7 @@ yarn-error.log*
 
 vuex-store.data
 /laradock-manager
+/build/laradock-manager
 /vendor/
 
 
