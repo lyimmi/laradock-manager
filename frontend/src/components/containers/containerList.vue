@@ -2,15 +2,37 @@
   <v-card>
     <v-skeleton-loader class="mx-auto" type="table" :loading="availableContainers.length === 0">
       <v-card-title>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-search"
-          label="Search"
-          single-line
-          hide-details
-        ></v-text-field>
+        <v-row>
+          <v-col class="py-0" cols="12" sm="4">
+            <v-menu offset-y>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn v-bind="attrs" v-on="on" small>Actions</v-btn>
+              </template>
+              <v-list>
+                <v-list-item
+                  v-for="(item, index) in massActions"
+                  :key="index"
+                  @click="runMassAction(item)"
+                >
+                  <v-list-item-title>{{ item.name }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-col>
+          <v-col class="py-0" cols="12" sm="8">
+            <v-text-field
+              v-model="search"
+              class="pa-0 ma-0"
+              append-icon="mdi-search"
+              label="Search"
+              single-line
+              hide-details
+            ></v-text-field>
+          </v-col>
+        </v-row>
       </v-card-title>
       <v-data-table
+        calculate-widths
         :loading="containersLoading"
         sortBy="favorite"
         :sortDesc="true"
@@ -95,6 +117,22 @@
                 </template>
                 <span>Open container logs</span>
               </v-tooltip>
+
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    class="ml-1"
+                    small
+                    v-show="item.state === 'Up'"
+                    @click="execDialog = true; executableContainer=item.name"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-console</v-icon>
+                  </v-btn>
+                </template>
+                <span>Exec container</span>
+              </v-tooltip>
             </v-col>
             <v-col cols="12" sm="6">
               <v-tooltip top>
@@ -140,6 +178,37 @@
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
     </v-fab-transition>
+    <v-dialog v-model="execDialog" persistent max-width="350">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Select user</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="12" sm="12">
+                <v-select
+                  v-model="executableUser"
+                  :items="['root', 'laradock']"
+                  label="User"
+                  required
+                ></v-select>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="execDialog = false">Cancel</v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="execContainer(); execDialog = false"
+            :disabled="executableUser === ''"
+          >Exec</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
@@ -153,6 +222,13 @@ export default {
       confirmDialog: false,
       search: "",
       selected: [],
+      execDialog: false,
+      executableContainer: "",
+      executableUser: "",
+      massActions: [
+        { value: "start", name: "Start Containers", action: "startContainer" },
+        { value: "stop", name: "Stop Containers", action: "stopContainer" }
+      ],
       headers: [
         {
           text: "Favorite",
@@ -167,7 +243,13 @@ export default {
           align: "center"
         },
         { text: "State", value: "state", sortable: true, align: "center" },
-        { text: "Actions", value: "actions", sortable: false, align: "center" }
+        {
+          text: "Actions",
+          value: "actions",
+          sortable: false,
+          align: "center",
+          width: 400
+        }
       ]
     };
   },
@@ -184,6 +266,17 @@ export default {
       "addFavoriteContiner",
       "removeFavoriteContiner"
     ]),
+    runMassAction(item) {
+      if (typeof this[item.action] === "function") {
+        this[item.action](
+          this.selected
+            .map(function(elem) {
+              return elem.name;
+            })
+            .join("|")
+        );
+      }
+    },
     getColor(state) {
       if (state === "Up") {
         return "green";

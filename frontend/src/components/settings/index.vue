@@ -29,7 +29,7 @@ export default {
   mixins: [Docker],
   components: {app},
   data() {
-    return { tab: null, tabs: ["App", "Laradock"] };
+    return { tab: null, tabs: ["App"] };
   },
   mounted() {},
 };

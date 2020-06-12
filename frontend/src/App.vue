@@ -25,7 +25,7 @@
             </v-list-item>
             <v-list-item to="/stats">
               <v-list-item-action>
-                <v-icon>mdi-docker</v-icon>
+                <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-action>
               <v-list-item-content>
                 <v-list-item-title>Stats</v-list-item-title>
