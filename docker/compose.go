@@ -153,9 +153,6 @@ func (t *Compose) CopyEnv() string {
 	return returnResponse(false, "false")
 }
 
-func (t *Compose) listContainers() {
-}
-
 //GetContainersWithStatuses run docker-compose ps and parse the output
 func (t *Compose) GetContainersWithStatuses() string {
 	var stdout, stderr bytes.Buffer
@@ -375,9 +372,9 @@ func (t *Compose) Exec(container string, user string) string {
 
 // Logs show logs
 func (t *Compose) Logs(container string) string {
-	cmd := exec.Command("gnome-terminal", "--", "docker-compose", "logs", "-f", "--tail=100")
+	cmd := exec.Command("gnome-terminal", "--", "docker-compose", "logs", "-f", "--tail=100", container)
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("start", "cmd", "/k", "docker-compose", "logs", "-f", "--tail=100")
+		cmd = exec.Command("start", "cmd", "/k", "docker-compose", "logs", "-f", "--tail=100", container)
 	}
 	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	if err := cmd.Run(); err != nil {

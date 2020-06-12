@@ -28,76 +28,100 @@
             <v-icon v-else>mdi-star-outline</v-icon>
           </v-btn>
         </template>
+
         <template v-slot:item.state="{ item }">
           <v-chip :color="getColor(item.state)" small>{{ item.state }}</v-chip>
         </template>
+
         <template v-slot:item.actions="{item}">
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                small
-                v-show="item.state === 'Down'"
-                @click="upContainer(item.name)"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-icon>mdi-arrow-up</v-icon>
-              </v-btn>
-            </template>
-            <span>Up container</span>
-          </v-tooltip>
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                small
-                v-show="item.state === 'Stopped'"
-                @click="startContainer(item.name)"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-icon>mdi-play</v-icon>
-              </v-btn>
-            </template>
-            <span>Start container</span>
-          </v-tooltip>
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                small
-                v-show="item.state === 'Up'"
-                @click="stopContainer(item.name)"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-icon>mdi-stop</v-icon>
-              </v-btn>
-            </template>
-            <span>Stop container</span>
-          </v-tooltip>
+          <v-row>
+            <v-col cols="12" sm="6">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    small
+                    v-show="item.state === 'Down'"
+                    @click="upContainer(item.name)"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-arrow-up</v-icon>
+                  </v-btn>
+                </template>
+                <span>Up container</span>
+              </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    small
+                    v-show="item.state === 'Stopped'"
+                    @click="startContainer(item.name)"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-play</v-icon>
+                  </v-btn>
+                </template>
+                <span>Start container</span>
+              </v-tooltip>
 
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                small
-                class="ml-5 mr-1"
-                @click="buildContainer(item.name)"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-icon>mdi-docker</v-icon>
-              </v-btn>
-            </template>
-            <span>Build container (cached)</span>
-          </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    small
+                    v-show="item.state === 'Up'"
+                    @click="stopContainer(item.name)"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-stop</v-icon>
+                  </v-btn>
+                </template>
+                <span>Stop container</span>
+              </v-tooltip>
 
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn small @click="buildContainer(item.name, true)" v-bind="attrs" v-on="on">
-                <v-icon color="red">mdi-docker</v-icon>
-              </v-btn>
-            </template>
-            <span>Build container (without cache)</span>
-          </v-tooltip>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    class="ml-1"
+                    small
+                    v-show="item.state === 'Up'"
+                    @click="logContainer(item.name)"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-view-list</v-icon>
+                  </v-btn>
+                </template>
+                <span>Open container logs</span>
+              </v-tooltip>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    small
+                    class="mr-1"
+                    @click="buildContainer(item.name)"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-account-hard-hat</v-icon>
+                  </v-btn>
+                </template>
+                <span>Build container (cached)</span>
+              </v-tooltip>
+
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn small @click="buildContainer(item.name, true)" v-bind="attrs" v-on="on">
+                    <v-icon color="red">mdi-account-hard-hat</v-icon>
+                  </v-btn>
+                </template>
+                <span>Build container (without cache)</span>
+              </v-tooltip>
+            </v-col>
+          </v-row>
         </template>
       </v-data-table>
     </v-skeleton-loader>

@@ -86,6 +86,13 @@ export default {
         stopStats() {
             window.backend.Compose.StatsStop()
         },
+        logContainer(container){
+            window.backend.Compose.Logs(container)
+                .catch(error => {
+                    this.setError(error)
+                    this.containersLoading = false
+                })
+        },
         handleResponse(res) {
             try {
                 res = JSON.parse(res)
