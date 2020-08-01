@@ -63,9 +63,6 @@ export default {
       containerPrefixRules: [v => !!v || "Container prefix is required"]
     };
   },
-  mounted() {
-    this.$refs.appSettings.validate();
-  },
   computed: {
     ...mapGetters("Settings", ["laradockPath", "terminalPath"]),
     containerPrefix: {
@@ -84,6 +81,9 @@ export default {
         return this.$store.getters["Settings/darkTheme"];
       }
     }
+  },
+  mounted() {
+    this.$refs.appSettings.validate();
   },
   watch: {
     darkTheme(val) {

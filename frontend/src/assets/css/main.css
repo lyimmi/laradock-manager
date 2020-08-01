@@ -1,23 +1,23 @@
+html, body{
+  background-color: #424250;
+}
+
+.theme--dark.v-application{
+  background: #424250!important;
+}
+.theme--light.v-application{
+  background: #f3f3f3!important;
+}
+
 #app {
   font-family: "Roboto", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #eee;
-  margin-top: 60px;
 }
 
-html {
-  height: 100%;
-  overflow: hidden;
-  background-color: #131313;
-  background-size: 20px 20px;
+tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.03);
 }
-
-.logo {
-  width: 16em;
-}
-
 /* roboto-regular - latin */
 @font-face {
   font-family: "Roboto";

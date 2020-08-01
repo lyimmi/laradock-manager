@@ -82,40 +82,38 @@ export default {
   mixins: [DockerMixin, ErrorHandler],
   data: () => ({
     drawer: null,
-    refreshCounter: 0
+    refreshCounter: 0,
   }),
+  computed: {
+    ...mapGetters("Settings", ["darkTheme"]),
+  },
   created() {
-    this.$vuetify.theme.dark = this.darkTheme;
     if (this.$router.history.current.path !== "/home") {
       this.$router.push("home");
     }
     this.setUpMasterErrorHandler();
   },
   mounted() {
+    this.$vuetify.theme.dark = this.darkTheme;
     this.$root.$refs.confirm = this.$refs.confirm;
-  },
-  computed: {
-    ...mapGetters("Settings", ["darkTheme"])
   },
   methods: {
     log(l) {
       console.log(l);
-    }
+    },
     // ...mapActions("Settings", ["setLaradockPath"])
-  }
+  },
+  watch: {
+    darkTheme(val) {
+      this.$vuetify.theme.dark = val;
+    },
+  },
 };
 </script>
 
 <style>
-.logo {
-  width: 16em;
-}
-
-a {
-  text-decoration: none;
-}
+@import "./assets/css/main.css";
 </style>
-
 
 <style lang="scss" scoped>
 .fade-enter-active,

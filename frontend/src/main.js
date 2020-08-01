@@ -3,6 +3,7 @@ import * as Wails from "@wailsapp/runtime";
 import Vue from "vue";
 import store from "./store";
 import vuetify from "@/plugins/vuetify"; // path to vuetify export
+import { preset } from 'vue-cli-plugin-vuetify-preset-rally/preset'
 import VueRouter from "vue-router";
 import routes from "./routes";
 import App from "./App.vue";
@@ -23,6 +24,7 @@ Vue.prototype.$ticker = new Ticker(250);
 
 Wails.Init(() => {
   new Vue({
+    preset,
     store,
     vuetify,
     router,
