@@ -1,14 +1,13 @@
-import Vue from "vue";
 const namespaced = true;
 
 const state = {
-  favorites: [],
+  favoritContainers: [],
   availableContainers: []
 };
 
 const mutations = {
   SET_AVAILABLE_CONTAINERS(state, payload) {
-    Vue.set(state, "availableContainers", payload);
+    state.availableContainers = payload
   },
   UPDATE_AVAILABLE_CONTAINER(state, payload) {
     const index = state.availableContainers.findIndex(x => x === payload.item.name);
@@ -16,17 +15,17 @@ const mutations = {
     state.availableContainers[index] = payload.item;
   },
   ADD_FAVORITE(state, payload) {
-    state.favorites.push(payload);
+    state.favoritContainers.push(payload);
   },
   REMOVE_FAVORITE(state, payload) {
-    const index = state.favorites.findIndex(x => x === payload);
-    state.favorites.splice(index, 1);
+    const index = state.favoritContainers.findIndex(x => x === payload);
+    state.favoritContainers.splice(index, 1);
   }
 };
 
 const getters = {
   favoritContainers(state) {
-    return state.favorites;
+    return state.favoritContainers;
   },
   availableContainers(state) {
     return state.availableContainers;

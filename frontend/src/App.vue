@@ -15,15 +15,7 @@
           mini-variant-width="60"
         >
           <v-list dense>
-            <v-list-item @click="$root.$emit('refreshData')" prevent>
-              <v-list-item-action>
-                <v-icon>mdi-refresh</v-icon>
-              </v-list-item-action>
-              <v-list-item-content>
-                <v-list-item-title>Refresh</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item to="/">
+            <v-list-item to="/home">
               <v-list-item-action>
                 <v-icon>mdi-view-dashboard</v-icon>
               </v-list-item-action>
@@ -31,17 +23,17 @@
                 <v-list-item-title>Dashboard</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item to="/containers">
+            <v-list-item to="/stats">
               <v-list-item-action>
-                <v-icon>mdi-docker</v-icon>
+                <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title>Containers</v-list-item-title>
+                <v-list-item-title>Stats</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item to="/settings">
               <v-list-item-action>
-                <v-icon>mdi-settings-outline</v-icon>
+                <v-icon>mdi-cog</v-icon>
               </v-list-item-action>
               <v-list-item-content>
                 <v-list-item-title>Settings</v-list-item-title>
@@ -53,80 +45,63 @@
     </keep-alive>
     <!-- menu end -->
     <!-- content start -->
-    <v-content>
-      <transition name="fade" mode="out-in">
-        <router-view></router-view>
-      </transition>
-    </v-content>
+    <v-main>
+      <v-container fluid>
+        <transition name="fade" mode="out-in">
+          <router-view></router-view>
+        </transition>
+      </v-container>
+    </v-main>
     <!-- content end -->
     <v-snackbar
       v-for="(error, index) in errors"
       :key="index"
-      v-model="errors[index].state"
+      v-model="error.state"
       color="error"
       multi-line
-      :timeout="15000"
+      :timeout="error.timeout"
       :absolute="false"
       top
     >
       {{ error.text }}
-      <v-btn text @click="hideError(index)">Close</v-btn>
+      <v-btn text @click="clearError(index)">Close</v-btn>
     </v-snackbar>
+    <confirm-dialog ref="confirm" />
   </v-app>
 </template>
 
 <script>
-//import AppMenu from "./components/partials/app-menu";
-import dockerCompose from "./shared/dockerCompose";
-import { mapActions, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
+import DockerMixin from "./shared/dockerMixin";
+import ErrorHandler from "./shared/errorHandlerMixin";
+import ConfirmDialog from "./components/confirmDialog";
 
 export default {
   name: "app",
-  //components: { AppMenu },
-  mixins: [dockerCompose],
-  mounted() {
-    this.$vuetify.theme.dark = true;
-    this.waitForSettings(() => {
-      this.$vuetify.theme.dark = this.darkTheme;
-    });
-
-    //Router settings
-    this.$router.push("home");
-    this.$root.$on("showError", error => this.addError(error));
-  },
+  components: { ConfirmDialog },
+  mixins: [DockerMixin, ErrorHandler],
   data: () => ({
-    errors: [],
     drawer: null,
     refreshCounter: 0
   }),
+  created() {
+    this.$vuetify.theme.dark = this.darkTheme;
+    if (this.$router.history.current.path !== "/home") {
+      this.$router.push("home");
+    }
+    this.setUpMasterErrorHandler();
+  },
+  mounted() {
+    this.$root.$refs.confirm = this.$refs.confirm;
+  },
   computed: {
-    ...mapGetters("Settings", ["laradockPath", "darkTheme"])
+    ...mapGetters("Settings", ["darkTheme"])
   },
   methods: {
-    ...mapActions("Settings", ["setLaradockPath"]),
-    openBrowser(url) {
-      window.wails.Browser = { OpenURL: url };
-    },
-    addError(error) {
-      this.errors.push({
-        text: error.substring(0, 255),
-        state: true
-      });
-      this.cleanErrors();
-    },
-    hideError(index) {
-      this.errors[index].state = false;
-      setTimeout(() => {
-        this.cleanErrors();
-      }, 1500);
-    },
-    cleanErrors() {
-      this.errors.forEach((v, i) => {
-        if (!v.state) {
-          this.errors.splice(i, 1);
-        }
-      });
+    log(l) {
+      console.log(l);
     }
+    // ...mapActions("Settings", ["setLaradockPath"])
   }
 };
 </script>

@@ -1,5 +1,5 @@
 Package: laradock-manager
-Version: 0.3.2
+Version: 0.4.0
 Section: devel
 Priority: optional
 Architecture: amd64
@@ -8,7 +8,7 @@ Maintainer: Zámbó Levetne <levente.zambo@gmail.com>
 Homepage: https://github.com/Lyimmi/laradock-manager
 Description: Laradock Manager
   A simple application for managing laradock containers.
-  Developed and tested only on Ubuntu 19.04/18.04
+  Developed and tested only on Ubuntu 20.04/19.04/18.04
  .
   Made with https://wails.app/ (go & vue.js & vuetify)
  .

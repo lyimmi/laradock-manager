@@ -16,7 +16,7 @@ class VuexPersist {
 
   checkDriver(callback) {
     if (typeof window.backend !== "undefined" && this.driver === null) {
-      this.driver = window.backend.VuexState;
+      this.driver = window.backend.State;
     } else if (this.driver !== null) {
       if (typeof callback === "function") {
         callback()

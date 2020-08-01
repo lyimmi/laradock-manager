@@ -2,10 +2,9 @@ import Vue from "vue";
 const namespaced = true;
 
 const state = {
-  env: false,
-  docker: false,
-  dockerCompose: false,
-  laradockPath: false
+  env: "",
+  docker: "",
+  dockerCompose: ""
 };
 
 const mutations = {
