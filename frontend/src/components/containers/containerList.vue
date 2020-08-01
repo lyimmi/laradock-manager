@@ -226,6 +226,7 @@ export default {
       executableContainer: "",
       executableUser: "",
       massActions: [
+        { value: "up", name: "Up Containers", action: "upContainer" },
         { value: "start", name: "Start Containers", action: "startContainer" },
         { value: "stop", name: "Stop Containers", action: "stopContainer" }
       ],
@@ -267,6 +268,7 @@ export default {
       "removeFavoriteContiner"
     ]),
     runMassAction(item) {
+      console.log(item.action)
       if (typeof this[item.action] === "function") {
         this[item.action](
           this.selected

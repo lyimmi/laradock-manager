@@ -113,6 +113,24 @@ export default {
         },
 
         /**
+         * Check if any container is up
+         */
+        hasRunning() {
+            this.containersLoading = true
+            return new Promise(resolve => {
+                window.backend.Compose.HasRunning()
+                .then(res => {
+                    resolve(res)
+                })
+                .catch(error => {
+                    this.setError(error)
+                    this.containersLoading = false
+                    resolve(false)
+                })
+            })
+        },
+
+        /**
          * Start docker status events (goroutine)
          */
         getStats() {

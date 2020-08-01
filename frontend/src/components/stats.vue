@@ -1,13 +1,6 @@
 <template>
   <div>
-    <v-alert
-      v-if="stats.length === 0"
-      icon="mdi-database-sync"
-      prominent
-      text
-      type="info"
-    >No container data available, plase wait.</v-alert>
-    <v-card v-else>
+    <v-card>
       <v-simple-table>
         <template v-slot:default>
           <thead>
@@ -37,6 +30,31 @@
         </template>
       </v-simple-table>
     </v-card>
+
+    <v-alert
+      v-if="hasContainersUp === null"
+      icon="mdi-database-sync"
+      prominent
+      text
+      type="info"
+      transition="fade-transition"
+    >Checking Containers please wait...</v-alert>
+    <v-alert
+      v-else-if="hasContainersUp === true && stats.length === 0"
+      icon="mdi-database-sync"
+      prominent
+      text
+      type="info"
+      transition="fade-transition"
+    >No container data available, plase wait.</v-alert>
+    <v-alert
+      v-else-if="hasContainersUp === false"
+      icon="mdi-database-remove"
+      prominent
+      text
+      type="warning"
+      transition="fade-transition"
+    >No container is up, please start one first!</v-alert>
   </div>
 </template>
 <script>
@@ -46,20 +64,29 @@ export default {
   mixins: [DockerMixin],
   data: () => {
     return {
-      stats: []
+      hasContainersUp: null,
+      stats: [],
     };
   },
   created() {
     // Attach an event handler to <div>
-    window.wails.Events.On("stats", stats => {
+    window.wails.Events.On("stats", (stats) => {
       this.stats = JSON.parse(atob(stats));
+      console.log(this.stats);
     });
   },
   destroyed() {
     this.stopStats();
   },
   mounted() {
-    this.getStats();
-  }
+    this.hasRunning().then((res) => {
+      this.hasContainersUp = res;
+      console.log(this.stats)
+      console.log(res)
+      if (res) {
+        this.getStats();
+      }
+    });
+  },
 };
 </script>

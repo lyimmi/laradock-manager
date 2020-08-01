@@ -27,6 +27,8 @@ type Compose struct {
 	runtime      *wails.Runtime
 	statsQuit    chan struct{}
 	statsRunning bool
+	HasUp        bool
+	HasUpLast    time.Time
 }
 
 // envStruct
@@ -153,8 +155,7 @@ func (t *Compose) CopyEnv() string {
 	return returnResponse(false, "false")
 }
 
-//GetContainersWithStatuses run docker-compose ps and parse the output
-func (t *Compose) GetContainersWithStatuses() string {
+func (t *Compose) GetContainersWithStatusesSlice() ([]container, error) {
 	var stdout, stderr bytes.Buffer
 	var containers []container
 
@@ -164,10 +165,9 @@ func (t *Compose) GetContainersWithStatuses() string {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	outStr := string(stdout.Bytes())
 	if err != nil {
-		t.emitError(errStr)
-		return returnResponse(false, "Error: "+fmt.Sprint(err)+": "+errStr)
+		return make([]container, 0), err
 	}
 	reg := regexp.MustCompile("\n" + t.vuexState.Store.Settings.ContainerPrefix + "_")
 	lines := reg.Split(outStr, -1)
@@ -177,6 +177,9 @@ func (t *Compose) GetContainersWithStatuses() string {
 		if i > 0 {
 			if len(contArr) > 2 {
 				name := strings.Replace(contArr[0], "_1", "", -1)
+				if name == "docker-in-" { //fix docker-in-docker container...
+					name = name + "docker"
+				}
 				state := "Up"
 				favorite := false
 				for _, f := range t.vuexState.Store.Containers.Favorites {
@@ -199,17 +202,16 @@ func (t *Compose) GetContainersWithStatuses() string {
 
 	//Get all available containers from yml containers
 	stdout, stderr = bytes.Buffer{}, bytes.Buffer{}
-	outStr, errStr = "", ""
+	outStr = ""
 
 	cmd = exec.Command("docker-compose", "--no-ansi", "ps", "--services")
 	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err = cmd.Run()
-	outStr, errStr = string(stdout.Bytes()), string(stderr.Bytes())
+	outStr = string(stdout.Bytes())
 	if err != nil {
-		t.emitError("Error: " + fmt.Sprint(err) + ": " + errStr)
-		return returnResponse(false, "Error: "+fmt.Sprint(err)+": "+errStr)
+		return make([]container, 0), err
 	}
 
 	reg = regexp.MustCompile(`\n`)
@@ -239,12 +241,44 @@ func (t *Compose) GetContainersWithStatuses() string {
 			containers = append(containers, cont)
 		}
 	}
+	return containers, nil
+}
+
+//GetContainersWithStatuses run docker-compose ps and parse the output
+func (t *Compose) GetContainersWithStatuses() string {
+	containers, err := t.GetContainersWithStatusesSlice()
+	if err != nil {
+		t.emitError("Error: " + fmt.Sprint(err))
+		return returnResponse(false, "Error: "+fmt.Sprint(err))
+	}
 	res, resErr := json.Marshal(containers)
 	if resErr != nil {
 		t.emitError("Error: " + fmt.Sprint(resErr))
 		return returnResponse(false, "Error: "+fmt.Sprint(resErr))
 	}
 	return returnResponse(true, string(res))
+}
+
+//HasRunning check if there are any containers running
+func (t *Compose) HasRunning() bool {
+	if time.Now().After(t.HasUpLast.Add(2 * time.Second)) {
+		containers, err := t.GetContainersWithStatusesSlice()
+		if err != nil {
+			t.emitError("Error: " + fmt.Sprint(err))
+			return false
+		}
+		ok := false
+		for _, c := range containers {
+			if c.State == "Up" {
+				ok = true
+				break
+			}
+		}
+		t.HasUp = ok
+		return t.HasUp
+	}
+	return t.HasUp
+
 }
 
 //GetContainers run docker-compose ps --services and parse the output
@@ -310,9 +344,10 @@ func (t *Compose) Down() string {
 
 //Up Up a container
 func (t *Compose) Up(containers string) string {
-	cSlice := strings.Split(containers, "|")       //split the provided containers into a slice
-	args := []string{"up", "-d", "--no-build"}     //prepare args
-	args = append(args, cSlice...)                 //merge all arguments
+	cSlice := strings.Split(containers, "|")   //split the provided containers into a slice
+	args := []string{"up", "--no-build", "-d"} //prepare args
+	args = append(args, cSlice...)             //merge all arguments
+	fmt.Println(args)
 	cmd := exec.Command("docker-compose", args...) //build command
 	cmd.Dir = t.vuexState.Store.Settings.LaradockPath
 	var out bytes.Buffer
@@ -472,8 +507,6 @@ func (t *Compose) Stats() {
 func (t *Compose) StatsStop() {
 	if t.statsRunning {
 		close(t.statsQuit)
-	} else {
-		t.emitError("statse allready closed")
 	}
 	t.statsRunning = false
 }
