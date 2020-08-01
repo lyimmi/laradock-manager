@@ -91,11 +91,11 @@ func (t *Compose) SetTerminalPath(path string) bool {
 }
 
 //CheckDotEnv Check if .env file exists
-func (t *Compose) CheckDotEnv() string {
+func (t *Compose) CheckDotEnv() bool {
 	if _, err := os.Stat(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env")); err != nil {
-		return returnResponse(true, "false")
+		return false
 	}
-	return returnResponse(true, "true")
+	return true
 }
 
 //CheckDockerVersion Check the docker executable's version

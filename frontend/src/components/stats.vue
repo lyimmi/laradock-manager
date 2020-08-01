@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="hasDotEnv">
     <v-card>
       <v-simple-table>
         <template v-slot:default>
@@ -46,7 +46,7 @@
       text
       type="info"
       transition="fade-transition"
-    >No container data available, plase wait.</v-alert>
+    >Waiting for container statistics, it will take a moment.</v-alert>
     <v-alert
       v-else-if="hasContainersUp === false"
       icon="mdi-database-remove"
@@ -72,20 +72,20 @@ export default {
     // Attach an event handler to <div>
     window.wails.Events.On("stats", (stats) => {
       this.stats = JSON.parse(atob(stats));
-      console.log(this.stats);
     });
   },
   destroyed() {
     this.stopStats();
   },
   mounted() {
-    this.hasRunning().then((res) => {
-      this.hasContainersUp = res;
-      console.log(this.stats)
-      console.log(res)
-      if (res) {
-        this.getStats();
-      }
+    this.checkDotEnv().then((resenv) => {
+      if (!resenv) return;
+      this.hasRunning().then((res) => {
+        this.hasContainersUp = res;
+        if (res) {
+          this.getStats();
+        }
+      });
     });
   },
 };

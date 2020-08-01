@@ -6,35 +6,64 @@ export default {
     data: () => {
         return {
             containersLoading: false,
+            hasDotEnv: false,
+            startup: true
         }
     },
     computed: {
         ...mapGetters("Containers", ["favoritContainers", "availableContainers"]),
+        ...mapGetters("Settings", ["laradockPath", "terminalPath"]),
     },
     methods: {
         ...mapActions("Containers", ["setAvailableContainers", "updateAvailableContainers"]),
+        checkDotEnv() {
+            return new Promise(res => {
 
+                if (typeof window.startup === "undefined") {
+                    window.startup = true;
+                }
+
+                let timeout = 10;
+
+                if (window.startup) {
+                    timeout = 1000;
+                    window.startup = false;
+                }
+                setTimeout(() => {
+                    if (this.laradockPath === "") {
+                        this.setError("Laradock path is not set, please set it first!")
+                        this.hasDotEnv = false
+                        res(false);
+                    }
+                    this.hasDotEnv = true
+                    res(true);
+                }, timeout);
+            })
+        },
         /**
          * load containers with statuses
          */
         loadConstainers() {
-            this.containersLoading = true
-            window.backend.Compose.GetContainersWithStatuses()
-                .then(res => {
-                    try {
-                        let response = this.handleResponse(res)
-                        this.setAvailableContainers(JSON.parse(response))
-                    } catch (error) {
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                this.containersLoading = true
+                window.backend.Compose.GetContainersWithStatuses()
+                    .then(res => {
+                        try {
+                            let response = this.handleResponse(res)
+                            this.setAvailableContainers(JSON.parse(response))
+                        } catch (error) {
+                            this.setError(error)
+                        }
+                    })
+                    .then(() => {
+                        this.containersLoading = false
+                    })
+                    .catch(error => {
                         this.setError(error)
-                    }
-                })
-                .then(() => {
-                    this.containersLoading = false
-                })
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                })
+                        this.containersLoading = false
+                    })
+            });
         },
 
         /**
@@ -43,15 +72,18 @@ export default {
          * @param {String} container list of containers separated with {|} pipes
          */
         stopContainer(container) {
-            this.containersLoading = true
-            window.backend.Compose.Toggle("stop", container)
-                .then(() => {
-                    this.loadConstainers()
-                })
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                })
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                this.containersLoading = true
+                window.backend.Compose.Toggle("stop", container)
+                    .then(() => {
+                        this.loadConstainers()
+                    })
+                    .catch(error => {
+                        this.setError(error)
+                        this.containersLoading = false
+                    })
+            });
         },
 
         /**
@@ -60,15 +92,18 @@ export default {
          * @param {String} container list of containers separated with {|} pipes
          */
         startContainer(container) {
-            this.containersLoading = true
-            window.backend.Compose.Toggle("start", container)
-                .then(() => {
-                    this.loadConstainers()
-                })
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                })
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                this.containersLoading = true
+                window.backend.Compose.Toggle("start", container)
+                    .then(() => {
+                        this.loadConstainers()
+                    })
+                    .catch(error => {
+                        this.setError(error)
+                        this.containersLoading = false
+                    })
+            });
         },
 
         /**
@@ -77,15 +112,18 @@ export default {
          * @param {String} container list of containers separated with {|} pipes
          */
         upContainer(container) {
-            this.containersLoading = true
-            window.backend.Compose.Up(container)
-                .then(() => {
-                    this.loadConstainers()
-                })
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                })
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                this.containersLoading = true
+                window.backend.Compose.Up(container)
+                    .then(() => {
+                        this.loadConstainers()
+                    })
+                    .catch(error => {
+                        this.setError(error)
+                        this.containersLoading = false
+                    })
+            });
         },
 
         /**
@@ -95,53 +133,65 @@ export default {
          * @param {Boolean} force true to use --no-cache false to use cache
          */
         buildContainer(container, force = false) {
-            this.$root.$refs.confirm
-                .open('Build container', 'Are you sure to build the container?', { color: 'default' })
-                .then((confirm) => {
-                    if (confirm) {
-                        this.containersLoading = true
-                        window.backend.Compose.Build(container, force)
-                            .then(() => {
-                                this.loadConstainers()
-                            })
-                            .catch(error => {
-                                this.setError(error)
-                                this.containersLoading = false
-                            })
-                    }
-                })
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                this.$root.$refs.confirm
+                    .open('Build container', 'Are you sure to build the container?', { color: 'default' })
+                    .then((confirm) => {
+                        if (confirm) {
+                            this.containersLoading = true
+                            window.backend.Compose.Build(container, force)
+                                .then(() => {
+                                    this.loadConstainers()
+                                })
+                                .catch(error => {
+                                    this.setError(error)
+                                    this.containersLoading = false
+                                })
+                        }
+                    })
+            });
         },
 
         /**
          * Check if any container is up
          */
         hasRunning() {
-            this.containersLoading = true
             return new Promise(resolve => {
-                window.backend.Compose.HasRunning()
-                .then(res => {
-                    resolve(res)
+                this.checkDotEnv().then(res => {
+                    if (!res) resolve(false)
+                    this.containersLoading = true
+                    window.backend.Compose.HasRunning()
+                        .then(res => {
+                            resolve(res)
+                        })
+                        .catch(error => {
+                            this.setError(error)
+                            this.containersLoading = false
+                            resolve(false)
+                        })
                 })
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                    resolve(false)
-                })
-            })
+            });
         },
 
         /**
          * Start docker status events (goroutine)
          */
         getStats() {
-            window.backend.Compose.Stats()
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                window.backend.Compose.Stats()
+            });
         },
 
         /**
          * Stop docker status events (goroutine)
          */
         stopStats() {
-            window.backend.Compose.StatsStop()
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                window.backend.Compose.StatsStop()
+            });
         },
 
         /**
@@ -150,30 +200,35 @@ export default {
          * @param {String} container 
          */
         logContainer(container) {
-            window.backend.Compose.Logs(container)
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                })
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                window.backend.Compose.Logs(container)
+                    .catch(error => {
+                        this.setError(error)
+                        this.containersLoading = false
+                    })
+            });
         },
 
         /**
          * Execute a container
          */
         execContainer() {
-            if (this.executableContainer === "" || this.executableUser === "") {
-                return
-            }
-            window.backend.Compose.Exec(this.executableContainer, this.executableUser)
-                .then(() => {
-                    this.executableContainer = ""
-                    this.executableUser = ""
-                })
-                .catch(error => {
-                    this.setError(error)
-                    this.containersLoading = false
-                })
-
+            this.checkDotEnv().then(res => {
+                if (!res) return
+                if (this.executableContainer === "" || this.executableUser === "") {
+                    return
+                }
+                window.backend.Compose.Exec(this.executableContainer, this.executableUser)
+                    .then(() => {
+                        this.executableContainer = ""
+                        this.executableUser = ""
+                    })
+                    .catch(error => {
+                        this.setError(error)
+                        this.containersLoading = false
+                    })
+            });
         },
 
         /**
@@ -187,7 +242,6 @@ export default {
                 if (res.success) {
                     return res.message
                 } else {
-                    console.log(res)
                     this.setError(res.message)
                     return null
                 }

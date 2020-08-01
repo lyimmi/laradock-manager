@@ -1,6 +1,10 @@
 <template>
-  <v-card>
-    <v-skeleton-loader class="mx-auto" type="table" :loading="availableContainers.length === 0">
+  <v-card v-if="hasDotEnv">
+    <v-skeleton-loader
+      class="mx-auto"
+      type="table"
+      :loading="availableContainers === null || availableContainers.length === 0"
+    >
       <v-card-title>
         <v-row>
           <v-col class="py-0" cols="12" sm="4">
@@ -228,20 +232,20 @@ export default {
       massActions: [
         { value: "up", name: "Up Containers", action: "upContainer" },
         { value: "start", name: "Start Containers", action: "startContainer" },
-        { value: "stop", name: "Stop Containers", action: "stopContainer" }
+        { value: "stop", name: "Stop Containers", action: "stopContainer" },
       ],
       headers: [
         {
           text: "Favorite",
           value: "favorite",
           sortable: true,
-          align: "center"
+          align: "center",
         },
         {
           text: "Name",
           sortable: true,
           value: "name",
-          align: "center"
+          align: "center",
         },
         { text: "State", value: "state", sortable: true, align: "center" },
         {
@@ -249,30 +253,27 @@ export default {
           value: "actions",
           sortable: false,
           align: "center",
-          width: 400
-        }
-      ]
+          width: 400,
+        },
+      ],
     };
   },
   mounted() {
-    if (this.laradockPath !== "") {
-      this.loadConstainers();
-    }
+    this.loadConstainers();
   },
   computed: {
-    ...mapGetters("Settings", ["laradockPath", "containerPrefix"])
+    ...mapGetters("Settings", ["laradockPath", "containerPrefix"]),
   },
   methods: {
     ...mapActions("Containers", [
       "addFavoriteContiner",
-      "removeFavoriteContiner"
+      "removeFavoriteContiner",
     ]),
     runMassAction(item) {
-      console.log(item.action)
       if (typeof this[item.action] === "function") {
         this[item.action](
           this.selected
-            .map(function(elem) {
+            .map(function (elem) {
               return elem.name;
             })
             .join("|")
@@ -291,7 +292,7 @@ export default {
       }
     },
     toggleFavorite(container) {
-      const promise = new Promise(resolve => {
+      const promise = new Promise((resolve) => {
         if (container.favorite) {
           this.removeFavoriteContiner(container.name).then(() => {
             resolve(true);
@@ -306,7 +307,7 @@ export default {
       promise.then(() => {
         this.loadConstainers();
       });
-    }
-  }
+    },
+  },
 };
 </script>

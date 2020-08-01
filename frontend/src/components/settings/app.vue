@@ -20,7 +20,7 @@
               label="Laradock path"
               v-model="laradockPath"
               :rules="laradockPathRules"
-              @focus.prevent="selectLaradockDirectory"
+              @click.prevent="selectLaradockDirectory"
             ></v-text-field>
           </v-col>
 
@@ -51,8 +51,10 @@
 </template>
 <script>
 import { mapActions, mapGetters } from "vuex";
+import DockerMixin from "@/shared/dockerMixin";
 export default {
   name: "app",
+  mixins: [DockerMixin],
   data: () => {
     return {
       valid: true,
@@ -114,6 +116,7 @@ export default {
     storeLaradockPath(path) {
       this.setLaradockPath(path);
       this.applyLaradockPath(path);
+      this.hasDotEnv = path !== "";
     }
   }
 };

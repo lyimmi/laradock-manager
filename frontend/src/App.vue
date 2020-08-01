@@ -45,13 +45,13 @@
     </keep-alive>
     <!-- menu end -->
     <!-- content start -->
-    <v-content>
+    <v-main>
       <v-container fluid>
         <transition name="fade" mode="out-in">
           <router-view></router-view>
         </transition>
       </v-container>
-    </v-content>
+    </v-main>
     <!-- content end -->
     <v-snackbar
       v-for="(error, index) in errors"

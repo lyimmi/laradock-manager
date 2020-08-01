@@ -3,7 +3,7 @@ import Vue from "vue";
 const namespaced = true;
 
 const state = {
-  laradockPath: "/home/lyimmi/projects/webnetwork/laradock",
+  laradockPath: "",
   terminalPath: "/usr/bin/gnome-terminal",
   containerPrefix: "laradock",
   darkTheme: true
