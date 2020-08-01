@@ -19,3 +19,6 @@ In order to use this your current user need to be able to access docker without 
 ## Build deb file
 
 dpkg-deb --build build/laradock-manager-0.4.0
+
+
+![Preview](https://github.com/lyimmi/laradock-manger/laradock-manager-0.4.0.gif)
