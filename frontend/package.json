@@ -22,6 +22,7 @@
     "vuex": "^3.5.1"
   },
   "devDependencies": {
+    "serialize-javascript": ">=3.1.0",
     "@mdi/font": "^5.4.55",
     "@vue/cli-plugin-babel": "^4.4.6",
     "@vue/cli-plugin-eslint": "^4.4.6",
