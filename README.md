@@ -18,7 +18,7 @@ In order to use this your current user need to be able to access docker without 
 
 ## Build deb file
 
-dpkg-deb --build build/laradock-manager-0.4.0
+`$ ./build.sh`
 
 
 ![Preview](https://raw.githubusercontent.com/Lyimmi/laradock-manager/master/assets/laradock-manager-0.4.0.gif)
