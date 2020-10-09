@@ -9,50 +9,8 @@ import (
 	"github.com/wailsapp/wails"
 )
 
-// App wails runtime
-type App struct {
-	runtime *wails.Runtime
-}
-
-// WailsInit initialize wails
-func (s *App) WailsInit(r *wails.Runtime) error {
-	s.runtime = r
-	return nil
-}
-
-// SelectDirectory open a directory selector dialog
-func (s *App) SelectDirectory() string {
-	return s.runtime.Dialog.SelectDirectory()
-}
-
-// SelectFile open a file selector dialog
-func (s *App) SelectFile() string {
-	return s.runtime.Dialog.SelectFile()
-}
-
-// Project represents project.json
-type Project struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Author      struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"author"`
-	Version    string `json:"version"`
-	Binaryname string `json:"binaryname"`
-	Frontend   struct {
-		Dir     string `json:"dir"`
-		Install string `json:"install"`
-		Build   string `json:"build"`
-		Bridge  string `json:"bridge"`
-		Serve   string `json:"serve"`
-	} `json:"frontend"`
-	WailsVersion string `json:"WailsVersion"`
-}
-
 // main
 func main() {
-
 	js := mewn.String("./frontend/dist/app.js")
 	css := mewn.String("./frontend/dist/app.css")
 	projectJSON := mewn.String("./project.json")
@@ -71,12 +29,9 @@ func main() {
 		Resizable: true,
 	})
 
-	vuexState := vuex.NewVuexState(project.Name)
-	dc := docker.NewDockerCompose(vuexState)
-	myApp := &App{}
-
-	app.Bind(myApp)
-	app.Bind(dc)
+	vuexState := vuex.NewVuexState(project.Binaryname)
+	app.Bind(&App{})
+	app.Bind(docker.NewDockerCompose(vuexState))
 	app.Bind(vuexState)
 
 	err := app.Run()

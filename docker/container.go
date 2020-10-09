@@ -4,19 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
 
-	b64 "encoding/base64"
-
-	"github.com/joho/godotenv"
-	"github.com/labstack/gommon/log"
 	"github.com/lyimmi/laradock-manager/vuex"
 	"github.com/wailsapp/wails"
 )
@@ -31,38 +24,10 @@ type Compose struct {
 	HasUpLast    time.Time
 }
 
-// envStruct
-type envStruck struct {
-}
-
-// Response struct
-type Response struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-}
-
 type container struct {
 	Name     string `json:"name"`
 	State    string `json:"state"`
 	Favorite bool   `json:"favorite"`
-}
-
-type stats struct {
-	Name                string `json:"name"`
-	CPUPercString       string `json:"cpu_perc_string"`
-	CPUPerc             string `json:"cpu_perc"`
-	MemoryUseage        string `json:"memory_usage"`
-	MemoryPercentString string `json:"memory_percent_string"`
-	MemoryPercent       string `json:"memory_percent"`
-}
-
-// returnResponse a response json
-func returnResponse(success bool, message string) string {
-	resp, err := json.Marshal(Response{Success: success, Message: message})
-	if err != nil {
-		log.Error(err)
-	}
-	return string(resp)
 }
 
 // WailsInit init
@@ -90,29 +55,6 @@ func (t *Compose) SetTerminalPath(path string) bool {
 	return true
 }
 
-//CheckDotEnv Check if .env file exists
-func (t *Compose) CheckDotEnv() bool {
-	if _, err := os.Stat(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env")); err != nil {
-		return false
-	}
-	return true
-}
-
-//CheckDockerVersion Check the docker executable's version
-func (t *Compose) CheckDockerVersion() string {
-	cmd := exec.Command("docker", "-v")
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-
-	if err != nil {
-		return returnResponse(false, fmt.Sprint(err)+": "+stderr.String())
-	}
-	return returnResponse(true, out.String())
-}
-
 //CheckDockerComposeVersion Check the docker-compose executable's version
 func (t *Compose) CheckDockerComposeVersion() string {
 	cmd := exec.Command("docker-compose", "-v")
@@ -128,33 +70,7 @@ func (t *Compose) CheckDockerComposeVersion() string {
 	return returnResponse(true, out.String())
 }
 
-//CopyEnv Make the .env file form env-example
-func (t *Compose) CopyEnv() string {
-	sourceFile, err := os.Open(filepath.Join(t.vuexState.Store.Settings.LaradockPath, "env-example"))
-	if err != nil {
-		return returnResponse(false, "false")
-	}
-
-	// Create new file
-	newFile, err := os.Create(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env"))
-	if err != nil {
-		return returnResponse(false, "false")
-	}
-
-	bytesCopied, err := io.Copy(newFile, sourceFile)
-	if err != nil {
-		return returnResponse(false, "false")
-	}
-
-	sourceFile.Close()
-	newFile.Close()
-
-	if bytesCopied > 0 {
-		return returnResponse(false, "true")
-	}
-	return returnResponse(false, "false")
-}
-
+//GetContainersWithStatusesSlice get a slice of statuses
 func (t *Compose) GetContainersWithStatusesSlice() ([]container, error) {
 	var stdout, stderr bytes.Buffer
 	var containers []container
@@ -418,99 +334,6 @@ func (t *Compose) Logs(container string) string {
 	return returnResponse(true, "Logs Started")
 }
 
-//DotEnvContent Return dot env contents
-func (t *Compose) DotEnvContent() map[string]string {
-	env, err := godotenv.Read(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env"))
-	if err != nil {
-		t.emitError("Error loading .env file")
-		log.Fatal(err)
-	}
-	return env
-}
-
-//SaveDotEnvContent save dot env contents
-func (t *Compose) SaveDotEnvContent(data string) string {
-	f, err := os.Create(filepath.Join(t.vuexState.Store.Settings.LaradockPath, ".env"))
-	if err != nil {
-		return returnResponse(false, fmt.Sprint(err))
-	}
-
-	_, err = f.WriteString(data)
-	if err != nil {
-		return returnResponse(false, fmt.Sprint(err))
-	}
-
-	err = f.Sync()
-	if err != nil {
-		return returnResponse(false, fmt.Sprint(err))
-	}
-
-	f.Close()
-	return returnResponse(true, "true")
-}
-
-// Stats collects docker stats
-func (t *Compose) Stats() {
-	if !t.statsRunning {
-		t.statsRunning = true
-		t.statsQuit = make(chan struct{})
-		go func() {
-			running := false
-			for {
-				select {
-				case <-t.statsQuit:
-					return
-				default:
-					if !running {
-						running = true
-						cmd := exec.Command("docker", "stats", "--no-stream", "--format", "\"{{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}\\t{{.MemPerc}}\"")
-						out, err := cmd.Output()
-						if err != nil {
-							t.emitError(err.Error())
-						}
-						reg := regexp.MustCompile("\n")
-						lines := reg.Split(string(out), -1)
-						lines = lines[:len(lines)-1]
-						statsa := []stats{}
-						for _, line := range lines {
-							reg = regexp.MustCompile("\t")
-							contArr := reg.Split(line, -1)
-							name := strings.Replace(contArr[0], "_1", "", -1)
-							name = strings.Replace(name, t.vuexState.Store.Settings.ContainerPrefix+"_", "", -1)
-							name = strings.Replace(name, `"`, "", -1)
-							stat := stats{
-								Name:                name,
-								CPUPercString:       contArr[1],
-								CPUPerc:             strings.Replace(contArr[1], `%`, "", -1),
-								MemoryUseage:        contArr[2],
-								MemoryPercentString: strings.Replace(contArr[3], `"`, "", -1),
-								MemoryPercent:       strings.Replace(contArr[3], `%"`, "", -1),
-							}
-							statsa = append(statsa, stat)
-						}
-						res, mErr := json.Marshal(statsa)
-						if mErr != nil {
-							t.emitError(err.Error())
-						}
-						uEnc := b64.URLEncoding.EncodeToString(res)
-						t.runtime.Events.Emit("stats", uEnc)
-						running = false
-					}
-				}
-				time.Sleep(5 * time.Second)
-			}
-		}()
-	}
-}
-
-//StatsStop stops docker stats go routine
-func (t *Compose) StatsStop() {
-	if t.statsRunning {
-		close(t.statsQuit)
-	}
-	t.statsRunning = false
-}
-
 func (t *Compose) regSplit(text string, delimeter string) []string {
 	reg := regexp.MustCompile(delimeter)
 	indexes := reg.FindAllStringIndex(text, -1)
@@ -522,9 +345,4 @@ func (t *Compose) regSplit(text string, delimeter string) []string {
 	}
 	result[len(indexes)] = text[laststart:len(text)]
 	return result
-}
-
-func (t *Compose) emitError(err string) {
-	uEnc := b64.URLEncoding.EncodeToString([]byte(err))
-	t.runtime.Events.Emit("backendError", uEnc)
 }
