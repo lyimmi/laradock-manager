@@ -5,7 +5,7 @@
         "name": "Zámbó, Levente",
         "email": "levente.zambo@gmail.com"
     },
-    "version": "0.5.0",
+    "version": "0.5.1",
     "binaryname": "laradock-manager",
     "frontend": {
         "dir": "frontend",
