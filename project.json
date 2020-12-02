@@ -5,7 +5,7 @@
         "name": "Zámbó, Levente",
         "email": "levente.zambo@gmail.com"
     },
-    "version": "0.5.1",
+    "version": "0.5.2",
     "binaryname": "laradock-manager",
     "frontend": {
         "dir": "frontend",
@@ -14,5 +14,5 @@
         "bridge": "src",
         "serve": "npm run serve"
     },
-    "WailsVersion": "v1.8"
+    "WailsVersion": "v1.9.1"
 }

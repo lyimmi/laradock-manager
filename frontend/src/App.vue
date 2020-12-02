@@ -87,13 +87,11 @@ export default {
   computed: {
     ...mapGetters("Settings", ["darkTheme"]),
   },
-  created() {
+  mounted() {
     if (this.$router.history.current.path !== "/home") {
       this.$router.push("home");
     }
     this.setUpMasterErrorHandler();
-  },
-  mounted() {
     this.$vuetify.theme.dark = this.darkTheme;
     this.$root.$refs.confirm = this.$refs.confirm;
   },

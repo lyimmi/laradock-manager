@@ -1,5 +1,3 @@
-import "babel-polyfill";
-import * as Wails from "@wailsapp/runtime";
 import Vue from "vue";
 import store from "./store";
 import vuetify from "@/plugins/vuetify"; // path to vuetify export
@@ -21,6 +19,8 @@ Vue.config.productionTip = false;
 Vue.config.devtools = true;
 Vue.prototype.$config = config;
 Vue.prototype.$ticker = new Ticker(250);
+
+import Wails from '@wailsapp/runtime';
 
 Wails.Init(() => {
   new Vue({

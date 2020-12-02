@@ -1,5 +1,4 @@
 import { mapActions, mapGetters } from "vuex";
-// import _ from "lodash";
 import ErrorHandler from "@/shared/errorHandlerMixin"
 export default {
     mixins: [ErrorHandler],
